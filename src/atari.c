@@ -414,6 +414,7 @@ int Atari800_Initialise(int *argc, char *argv[])
 		}
 		*argc = j;
 	}
+
 #ifndef ANDROID
 	got_config = CFG_LoadConfig(rtconfig_filename);
 #else

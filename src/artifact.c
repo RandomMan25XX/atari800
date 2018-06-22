@@ -61,9 +61,7 @@ static char const * const mode_cfg_strings[ARTIFACT_SIZE] = {
 
 static void UpdateMode(ARTIFACT_t old_mode, int reinit)
 {
-#if (NTSC_FILTER && SUPPORTS_CHANGE_VIDEOMODE) || defined(PAL_BLENDING)
 	int need_reinit = FALSE;
-#endif /* (NTSC_FILTER && SUPPORTS_CHANGE_VIDEOMODE) || defined(PAL_BLENDING) */
 	if (ARTIFACT_mode == old_mode)
 		return;
 
