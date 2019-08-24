@@ -66,7 +66,6 @@ SOURCES = \
 	src/crc32.c \
 	src/cycle_map.c \
 	src/devices.c \
-	src/emuos.c \
 	src/esc.c \
 	src/gtia.c \
 	src/ide.c \
@@ -75,13 +74,11 @@ SOURCES = \
 	src/log.c \
 	src/memory.c \
 	src/monitor.c \
-	src/mzpokeysnd.c \
 	src/pbi.c \
 	src/pbi_scsi.c \
 	src/pia.c \
 	src/pokey.c \
 	src/pokeysnd.c \
-	src/remez.c \
 	src/rtime.c \
 	src/screen.c \
 	src/sio.c \

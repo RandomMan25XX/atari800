@@ -37,11 +37,10 @@
 #include "videomode.h"
 
 VIDEOMODE_MODE_t NDS_VIDEO_mode;
-int atariBackground;
 
 void NDS_InitVideo(void)
 {
-	videoSetMode(MODE_5_2D);
+	videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG3_ACTIVE);
 	vramSetPrimaryBanks(
 		VRAM_A_MAIN_BG_0x06000000,
 		VRAM_B_MAIN_BG_0x06020000,
@@ -49,7 +48,12 @@ void NDS_InitVideo(void)
 		VRAM_D_LCD
 	);
 	consoleDemoInit();
-	atariBackground = bgInit(3, BgType_Bmp8, BgSize_B8_512x256, 0, 0);
+
+	REG_BG2CNT = BG_PRIORITY_0 | BG_BMP8_512x256;
+	REG_BG3CNT = BG_PRIORITY_1 | BG_BMP8_512x256;
+
+	REG_BLDCNT = BLEND_ALPHA | BLEND_SRC_BG2 | BLEND_DST_BG3;
+	REG_BLDALPHA = (8 * 0x101);
 }
 
 void PLATFORM_PaletteUpdate(void)
@@ -122,7 +126,7 @@ int PLATFORM_WindowMaximised(void)
 	return 1;
 }
 
-static s32 oldSx, oldSy;
+static s16 oldSx = 0, oldSy = 0;
 
 void PLATFORM_DisplayScreen(void)
 {
@@ -130,26 +134,43 @@ void PLATFORM_DisplayScreen(void)
 	u8* src = (u8*) Screen_atari;
 	src += VIDEOMODE_src_offset_left + (VIDEOMODE_src_offset_top * Screen_WIDTH);
 
-	if (bgGetMapBase(atariBackground) == 0)
-		dst += 512*256;
+	s16 sx = VIDEOMODE_src_width;
+	s16 sy = VIDEOMODE_src_height * 4 / 3;
 
-	s32 sx = VIDEOMODE_src_width * 256 / 256;
-	s32 sy = VIDEOMODE_src_height * 256 / 192;
+//	if ((REG_BG2CNT & 0x3C) == 0)
+//		dst += 512*256;
 
 	if (sx != oldSx || sy != oldSy)
 	{
 		oldSx = sx;
 		oldSy = sy;
-		bgSetScale(atariBackground, sx, sy);
-		bgUpdate();
+
+		REG_BG2PA = sx;
+		REG_BG2PB = 0;
+		REG_BG2PC = 0;
+		REG_BG2PD = sy;
+
+		REG_BG3PA = sx;
+		REG_BG3PB = 0;
+		REG_BG3PC = 0;
+		REG_BG3PD = sy;
+
+		REG_BG2X = 0;
+		REG_BG2Y = 0;
+		REG_BG3X = 64;
+		REG_BG3Y = 64;
 	}
 
-	for (int y = 0; y < VIDEOMODE_src_height; y++) {
-		dmaCopy(src + (y * Screen_WIDTH), dst + (y * 512), VIDEOMODE_src_width);
+	swiWaitForVBlank();
+
+	REG_DISPCNT |= 0x80;
+
+	for (int y = 0; y < VIDEOMODE_src_height; y++, src += Screen_WIDTH, dst += 512) {
+		dmaCopyWords(0, src, dst, VIDEOMODE_src_width);
 	}
 
-	if (bgGetMapBase(atariBackground) == 0)
-		bgSetMapBase(atariBackground, 8);
-	else
-		bgSetMapBase(atariBackground, 0);
+	REG_DISPCNT &= ~0x80;
+
+//	REG_BG2CNT ^= 0x10;
+//	REG_BG3CNT ^= 0x10;
 }

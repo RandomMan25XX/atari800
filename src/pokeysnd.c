@@ -295,14 +295,15 @@ int POKEYSND_DoInit(void)
 	init_vol_only();
 #endif /* VOL_ONLY_SOUND */
 
-	if (POKEYSND_enable_new_pokey)
+// FIXME: atari800-nds
+/*	if (POKEYSND_enable_new_pokey)
 		return MZPOKEYSND_Init(snd_freq17, POKEYSND_playback_freq,
 				POKEYSND_num_pokeys, POKEYSND_snd_flags, mz_quality
 #ifdef __PLUS
 				, mz_clear_regs
 #endif
 		);
-	else
+	else */
 		return pokeysnd_init_rf(snd_freq17, POKEYSND_playback_freq,
 				POKEYSND_num_pokeys, POKEYSND_snd_flags);
 }

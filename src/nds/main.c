@@ -62,7 +62,15 @@ void PLATFORM_ConfigSave(FILE *fp)
 
 int PLATFORM_Initialise(int *argc, char *argv[])
 {
-	cpuStartTiming(0);
+	TIMER0_CR &= ~TIMER_ENABLE;
+	TIMER1_CR &= ~TIMER_ENABLE;
+
+	TIMER0_DATA = 0;
+	TIMER1_DATA = 0;
+
+	TIMER0_CR = TIMER_DIV_256 | TIMER_ENABLE;
+	TIMER1_CR = TIMER_CASCADE | TIMER_ENABLE;
+
 	NDS_InitVideo();
 	fatInitDefault();
 	return TRUE;
@@ -76,7 +84,8 @@ void PLATFORM_Sleep(double s)
 
 double PLATFORM_Time(void)
 {
-	return (cpuGetTiming() / (double) BUS_CLOCK);
+	u32 time = TIMER0_DATA | (TIMER1_DATA << 16);
+	return (time / (double) (BUS_CLOCK / 256.0));
 }
 
 int PLATFORM_Exit(int run_monitor)
@@ -103,7 +112,6 @@ int main(int argc, char **argv)
 	while (1) {
 		INPUT_key_code = PLATFORM_Keyboard();
 		Atari800_Frame();
-		swiWaitForVBlank();
 		if (Atari800_display_screen)
 			PLATFORM_DisplayScreen();
 	}
