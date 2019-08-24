@@ -16,8 +16,12 @@
 #define MEMORY_dGetWordAligned(x)		UNALIGNED_GET_WORD(MEMORY_mem+(x), memory_read_aligned_word_stat)
 #define MEMORY_dPutWordAligned(x, y)	UNALIGNED_PUT_WORD(MEMORY_mem+(x), (y), memory_write_aligned_word_stat)
 #else	/* WORDS_UNALIGNED_OK */
-#define MEMORY_dGetWord(x)				(MEMORY_mem[x] + (MEMORY_mem[(x) + 1] << 8))
-#define MEMORY_dPutWord(x, y)			(MEMORY_mem[x] = (UBYTE) (y), MEMORY_mem[(x) + 1] = (UBYTE) ((y) >> 8))
+//#define MEMORY_dGetWord(x)				(MEMORY_mem[x] + (MEMORY_mem[(x) + 1] << 8))
+//#define MEMORY_dPutWord(x, y)			(MEMORY_mem[x] = (UBYTE) (y), MEMORY_mem[(x) + 1] = (UBYTE) ((y) >> 8))
+
+#define MEMORY_dGetWord(x)				(((x)&1) ? (MEMORY_mem[x] + (MEMORY_mem[(x) + 1] << 8)) : UNALIGNED_GET_WORD(MEMORY_mem+(x), memory_read_word_stat))
+#define MEMORY_dPutWord(x, y)			 (((x)&1) ? (MEMORY_mem[x] = (UBYTE) (y), MEMORY_mem[(x) + 1] = (UBYTE) ((y) >> 8)) : UNALIGNED_PUT_WORD(MEMORY_mem+(x), (y), memory_write_word_stat))
+
 /* faster versions of MEMORY_jdGetWord and MEMORY_dPutWord for even addresses */
 /* TODO: guarantee that memory is UWORD-aligned and use UWORD access */
 #define MEMORY_dGetWordAligned(x)		MEMORY_dGetWord(x)

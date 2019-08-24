@@ -12,6 +12,7 @@ extern UBYTE *Screen_dirty;
 #endif /* DIRTYRECT */
 
 extern ULONG *Screen_atari;
+extern ULONG *Screen_atari_ui;
 
 /* Dimensions of Screen_atari.
    Screen_atari is Screen_WIDTH * Screen_HEIGHT bytes.
@@ -19,8 +20,8 @@ extern ULONG *Screen_atari;
    to get actual RGB codes.
    You should never display anything outside the middle 336 columns. */
 // FIXME: atari800-nds
-//#define Screen_WIDTH  384
 #define Screen_WIDTH  512
+#define Screen_atari_WIDTH  384
 #define Screen_HEIGHT 240
 
 #ifdef BITPL_SCR

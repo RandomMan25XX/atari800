@@ -386,7 +386,7 @@
 /* #undef MOTIF */
 
 /* Define to allow color changes inside a scanline. */
-#define NEW_CYCLE_EXACT 1
+// #define NEW_CYCLE_EXACT 1
 
 /* Define to use nonlinear POKEY mixing. */
 /* #undef NONLINEAR_MIXING */
@@ -413,7 +413,7 @@
 #define PACKAGE_VERSION "4.0.0"
 
 /* Define to use page-based attribute array. */
-// #define PAGED_ATTRIB
+// #define PAGED_ATTRIB 1
 
 /* Use accurate PAL color blending. */
 /* #undef PAL_BLENDING */
@@ -536,7 +536,7 @@
 /* #undef USE_UI_BASIC_ONSCREEN_KEYBOARD */
 
 /* Define to use very slow computer support (faster -refresh). */
-#define VERY_SLOW 1
+// #define VERY_SLOW 1
 
 /* Define to emulate the Alien Group Voice Box. */
 /* #undef VOICEBOX */

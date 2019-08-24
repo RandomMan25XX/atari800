@@ -27,6 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <nds.h>
+
 #include "atari.h"
 #include "antic.h"
 #include "cpu.h"

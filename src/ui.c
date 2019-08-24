@@ -4160,6 +4160,8 @@ void UI_Run(void)
 #endif
 
 	UI_is_active = TRUE;
+	unsigned int *Screen_atari_real = Screen_atari;
+	Screen_atari = Screen_atari_ui;
 
 #ifdef DIRECTX
 	setcursor();
@@ -4319,6 +4321,7 @@ void UI_Run(void)
 	}
 
 	/* Sound_Active(TRUE); */
+	Screen_atari = Screen_atari_real;
 	UI_is_active = FALSE;
 #ifdef DIRECTX
 	setcursor();

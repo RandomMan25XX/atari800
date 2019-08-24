@@ -41,14 +41,26 @@
 
 VIDEOMODE_MODE_t NDS_VIDEO_mode;
 
+extern int NDS_ShouldDrawKeyboard;
 void NDS_DrawKeyboard(u8 *dst, u8 *src, u8 *tmp);
 
+ITCM_CODE
 static void vblankHandler(void)
 {
-	u8 *dst = (u8*) (0x06200000 + 256*192 - 256*64);
-	u8 *src = (u8*) 0x06200000;
-	u8 *tmp = (u8*) (0x06200000 + 256*384 - 256*128);
-	NDS_DrawKeyboard(dst, src, tmp);
+	if (((u32) Screen_atari) == 0x06000000) {
+		REG_BG2CNT |= 0x10;
+		REG_BG3CNT |= 0x10;
+	} else {
+		REG_BG2CNT &= ~0x10;
+		REG_BG3CNT &= ~0x10;
+	}
+
+	if (NDS_ShouldDrawKeyboard) {
+		u8 *dst = (u8*) (0x06200000 + 256*192 - 256*64);
+		u8 *src = (u8*) 0x06200000;
+		u8 *tmp = (u8*) (0x06200000 + 256*384 - 256*128);
+		NDS_DrawKeyboard(dst, src, tmp);
+	}
 }
 
 void NDS_InitVideo(void)
@@ -162,27 +174,26 @@ int PLATFORM_WindowMaximised(void)
 
 static s16 oldSx = 0, oldSy = 0;
 static int oldVsol = 0;
+static int oldVsot = 0;
 
 void PLATFORM_DisplayScreen(void)
 {
-	u8* dst = (u8*) 0x06000000;
-	u8* src = (u8*) Screen_atari;
-	src += (VIDEOMODE_src_offset_top * Screen_WIDTH);
-
 //	s16 sx = VIDEOMODE_src_width;
 //	s16 sy = VIDEOMODE_src_height * 4 / 3;
 	s16 sx = 320;
 	s16 sy = VIDEOMODE_src_height * 4 / 3;
 	int offset_left = VIDEOMODE_src_offset_left + ((VIDEOMODE_src_width - 320) / 2);
+	int offset_top = VIDEOMODE_src_offset_top;
 
 	static int i = 0;
 	i++;
 
-	if (sx != oldSx || sy != oldSy || offset_left != oldVsol)
+	if (sx != oldSx || sy != oldSy || offset_left != oldVsol || offset_top != oldVsot)
 	{
 		oldSx = sx;
 		oldSy = sy;
 		oldVsol = offset_left;
+		oldVsot = offset_top;
 
 		swiWaitForVBlank();
 
@@ -198,15 +209,17 @@ void PLATFORM_DisplayScreen(void)
 
 		REG_BG2X = 0 + (offset_left * 88);
 		REG_BG3X = -66 + (offset_left * 88);
-		REG_BG2Y = 0;
-		REG_BG3Y = 64;
+		REG_BG2Y = 0 + (offset_top * 64);
+		REG_BG3Y = 64 + (offset_top * 64);
 	}
 
-	while (DMA_CR(3) & DMA_BUSY);
+	if (UI_is_active) {
+		while (DMA_CR(3) & DMA_BUSY);
 
-	DMA_SRC(3) = (u32) src;
-	DMA_DEST(3) = (u32) dst;
-	DMA_CR(3) = DMA_ENABLE | DMA_32_BIT | DMA_START_VBL | (VIDEOMODE_src_height << 7);
+		DMA_SRC(3) = (u32) Screen_atari_ui;
+		DMA_DEST(3) = 0x06000000;
+		DMA_CR(3) = DMA_ENABLE | DMA_32_BIT | DMA_START_VBL | (VIDEOMODE_src_height << 7);
+	}
 
 #ifdef BITPL_SCR
 	if (!UI_is_active) {
@@ -217,7 +230,4 @@ void PLATFORM_DisplayScreen(void)
 		memcpy(Screen_atari_b, Screen_atari, Screen_WIDTH*Screen_HEIGHT);
 	}
 #endif
-
-//	REG_BG2CNT ^= 0x10;
-//	REG_BG3CNT ^= 0x10;
 }

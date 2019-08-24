@@ -381,6 +381,8 @@ static const int cycles[256] =
 #ifndef NO_GOTO
 __extension__ /* suppress -ansi -pedantic warnings */
 #endif
+#include <nds.h>
+ITCM_CODE
 void CPU_GO(int limit)
 {
 #ifdef NO_GOTO
@@ -389,7 +391,7 @@ void CPU_GO(int limit)
 #else
 #define OPCODE_ALIAS(code)	opcode_##code:
 #define DONE				goto next;
-	static const void *opcode[256] =
+	DTCM_DATA static const void *opcode[256] =
 	{
 		&&opcode_00, &&opcode_01, &&opcode_02, &&opcode_03,
 		&&opcode_04, &&opcode_05, &&opcode_06, &&opcode_07,

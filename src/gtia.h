@@ -110,7 +110,7 @@ extern UWORD GTIA_colour_translation_table[256];
 
 #endif /* USE_COLOUR_TRANSLATION_TABLE */
 
-extern UBYTE GTIA_pm_scanline[Screen_WIDTH / 2 + 8];	/* there's a byte for every *pair* of pixels */
+extern UBYTE GTIA_pm_scanline[Screen_atari_WIDTH / 2 + 8];	/* there's a byte for every *pair* of pixels */
 extern int GTIA_pm_dirty;
 
 extern UBYTE GTIA_collisions_mask_missile_playfield;

@@ -145,7 +145,7 @@ bool NDS_IsControlPressed()
 	return key_control != 0;
 }
 
-static bool isKeyTouched(touchPosition* pos, touch_area_t* area)
+static inline bool isKeyTouched(touchPosition* pos, touch_area_t* area)
 {
 	if (area->flags & TA_FLAG_SLANTED)
 	{
@@ -176,6 +176,8 @@ static void copyTexture(u8 *dst, u8 *src, int x, int y, int w, int h)
 	for (int ix = 0; ix < w; ix+=2, src+=2, dst+=2)
 		*(u16*)(dst) = *(u16*)(src);
 }
+
+DTCM_DATA int NDS_ShouldDrawKeyboard = 0;
 
 void NDS_DrawKeyboard(u8 *dst, u8 *src, u8 *tmp)
 {
@@ -266,6 +268,7 @@ int PLATFORM_Keyboard(void)
 		}
 		current_key_down = AKEY_NONE;
 		Atari800_display_screen = TRUE;
+		NDS_ShouldDrawKeyboard = 1;
 	}
 
 	if (UI_is_active)
@@ -386,6 +389,7 @@ int PLATFORM_Keyboard(void)
 			}
 		}
 
+		if (refresh) NDS_ShouldDrawKeyboard = 1;
 		if (refresh) Atari800_display_screen = TRUE;
 		return current_key_down;
 	}

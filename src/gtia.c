@@ -24,6 +24,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <nds.h>
 
 #include "antic.h"
 #include "binload.h"
@@ -159,7 +160,7 @@ bit 6 - Missile 2
 bit 7 - Missile 3
 */
 
-UBYTE GTIA_pm_scanline[Screen_WIDTH / 2 + 8];	/* there's a byte for every *pair* of pixels */
+UBYTE GTIA_pm_scanline[Screen_atari_WIDTH / 2 + 8];	/* there's a byte for every *pair* of pixels */
 int GTIA_pm_dirty = TRUE;
 
 #define C_PM0	0x01
@@ -340,7 +341,7 @@ void GTIA_NewPmScanline(void)
 #endif /* NEW_CYCLE_EXACT */
 /* Clear if necessary */
 	if (GTIA_pm_dirty) {
-		memset(GTIA_pm_scanline, 0, Screen_WIDTH / 2);
+		memset(GTIA_pm_scanline, 0, Screen_atari_WIDTH / 2);
 		GTIA_pm_dirty = FALSE;
 	}
 
@@ -394,8 +395,8 @@ void GTIA_NewPmScanline(void)
 		j += ptr - GTIA_pm_scanline - 2;					\
 		ptr = GTIA_pm_scanline + 2;						\
 	}												\
-	else if (ptr + j > GTIA_pm_scanline + Screen_WIDTH / 2 - 2)	\
-		j = GTIA_pm_scanline + Screen_WIDTH / 2 - 2 - ptr;		\
+	else if (ptr + j > GTIA_pm_scanline + Screen_atari_WIDTH / 2 - 2)	\
+		j = GTIA_pm_scanline + Screen_atari_WIDTH / 2 - 2 - ptr;		\
 	if (j > 0)										\
 		do											\
 			M##n##PL_T |= *ptr++ |= p;				\
