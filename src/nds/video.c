@@ -33,6 +33,7 @@
 #include "log.h"
 #include "platform.h"
 #include "screen.h"
+#include "ui.h"
 #include "util.h"
 #include "videomode.h"
 
@@ -127,23 +128,30 @@ int PLATFORM_WindowMaximised(void)
 }
 
 static s16 oldSx = 0, oldSy = 0;
+static int oldVsol = 0;
 
 void PLATFORM_DisplayScreen(void)
 {
 	u8* dst = (u8*) 0x06000000;
 	u8* src = (u8*) Screen_atari;
-	src += VIDEOMODE_src_offset_left + (VIDEOMODE_src_offset_top * Screen_WIDTH);
+	src += (VIDEOMODE_src_offset_top * Screen_WIDTH);
 
-	s16 sx = VIDEOMODE_src_width;
-	s16 sy = VIDEOMODE_src_height * 4 / 3;
+//	s16 sx = VIDEOMODE_src_width;
+//	s16 sy = VIDEOMODE_src_height * 4 / 3;
+	s16 sx = 320;
+	s16 sy = VIDEOMODE_src_height * 5 / 4;
+	int offset_left = VIDEOMODE_src_offset_left + ((VIDEOMODE_src_width - 320) / 2);
 
-//	if ((REG_BG2CNT & 0x3C) == 0)
-//		dst += 512*256;
+	static int i = 0;
+	i++;
 
-	if (sx != oldSx || sy != oldSy)
+	if (sx != oldSx || sy != oldSy || offset_left != oldVsol)
 	{
 		oldSx = sx;
 		oldSy = sy;
+		oldVsol = offset_left;
+
+		swiWaitForVBlank();
 
 		REG_BG2PA = sx;
 		REG_BG2PB = 0;
@@ -155,21 +163,27 @@ void PLATFORM_DisplayScreen(void)
 		REG_BG3PC = 0;
 		REG_BG3PD = sy;
 
-		REG_BG2X = 0;
+		REG_BG2X = 0 + (offset_left * 88);
+		REG_BG3X = 44 + (offset_left * 88);
 		REG_BG2Y = 0;
-		REG_BG3X = 64;
-		REG_BG3Y = 64;
+		REG_BG3Y = 44;
 	}
 
-	swiWaitForVBlank();
+	while (DMA_CR(3) & DMA_BUSY);
 
-	REG_DISPCNT |= 0x80;
+	DMA_SRC(3) = (u32) src;
+	DMA_DEST(3) = (u32) dst;
+	DMA_CR(3) = DMA_ENABLE | DMA_32_BIT | DMA_START_VBL | (VIDEOMODE_src_height << 7);
 
-	for (int y = 0; y < VIDEOMODE_src_height; y++, src += Screen_WIDTH, dst += 512) {
-		dmaCopyWords(0, src, dst, VIDEOMODE_src_width);
+#ifdef BITPL_SCR
+	if (!UI_is_active) {
+		unsigned int *Screen_atari_old = Screen_atari;
+		Screen_atari = Screen_atari_b;
+		Screen_atari_b = Screen_atari_old;
+	} else {
+		memcpy(Screen_atari_b, Screen_atari, Screen_WIDTH*Screen_HEIGHT);
 	}
-
-	REG_DISPCNT &= ~0x80;
+#endif
 
 //	REG_BG2CNT ^= 0x10;
 //	REG_BG3CNT ^= 0x10;

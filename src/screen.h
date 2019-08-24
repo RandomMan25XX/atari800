@@ -18,7 +18,9 @@ extern ULONG *Screen_atari;
    Each byte is an Atari color code - use Colours_Get[RGB] functions
    to get actual RGB codes.
    You should never display anything outside the middle 336 columns. */
-#define Screen_WIDTH  384
+// FIXME: atari800-nds
+//#define Screen_WIDTH  384
+#define Screen_WIDTH  512
 #define Screen_HEIGHT 240
 
 #ifdef BITPL_SCR

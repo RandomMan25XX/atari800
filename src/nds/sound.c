@@ -74,6 +74,7 @@ int PLATFORM_SoundSetup(Sound_setup_t *setup)
 	NDS_stream.format = ((setup->channels == 2) ? 1 : 0) | ((setup->sample_size == 2) ? 2 : 0);
 	NDS_stream.timer = MM_TIMER2;
 	NDS_stream.manual = false;
+	mmStreamOpen(&NDS_stream);
 
 	NDS_sound = setup;
 	PLATFORM_SoundContinue();

@@ -74,11 +74,13 @@ SOURCES = \
 	src/log.c \
 	src/memory.c \
 	src/monitor.c \
+	src/mzpokeysnd.c \
 	src/pbi.c \
 	src/pbi_scsi.c \
 	src/pia.c \
 	src/pokey.c \
 	src/pokeysnd.c \
+	src/remez.c \
 	src/rtime.c \
 	src/screen.c \
 	src/sio.c \
@@ -106,7 +108,7 @@ SOURCES = \
 #---------------------------------------------------------------------------------
 ARCH	:=	-mthumb -mthumb-interwork -march=armv5te -mtune=arm946e-s
 
-CFLAGS	:=	-g -Wall -O2 -mword-relocations -D_GNU_SOURCE \
+CFLAGS	:=	-g -Wall -O2 -flto=jobserver -mword-relocations -D_GNU_SOURCE \
 			-fomit-frame-pointer -ffast-math \
 			$(ARCH)
 
