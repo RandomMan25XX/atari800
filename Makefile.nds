@@ -46,7 +46,8 @@ INCLUDES	:=	src
 #	src/atari_ntsc/atari_ntsc.c \
 #	src/filter_ntsc.c \
 
-GRAPHICS =
+GRAPHICS = \
+	src/nds/keyboard.png
 
 SOURCES = \
 	src/afile.c \
@@ -143,10 +144,11 @@ export VPATH	:=	$(CURDIR)
 export DEPSDIR	:=	
 
 CFILES		:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
+PNGFILES	:=	$(foreach dir,$(GRAPHICS),$(CURDIR)/$(dir))
 
 export LD	:=	$(CC)
 export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
-			$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
+			$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(PNGFILES:.png=.o)
 
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \

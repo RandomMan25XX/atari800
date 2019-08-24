@@ -37,10 +37,27 @@
 #include "util.h"
 #include "videomode.h"
 
+#include "keyboard.h"
+
 VIDEOMODE_MODE_t NDS_VIDEO_mode;
+
+void NDS_DrawKeyboard(u8 *dst, u8 *src, u8 *tmp);
+
+static void vblankHandler(void)
+{
+	u8 *dst = (u8*) (0x06200000 + 256*192 - 256*64);
+	u8 *src = (u8*) 0x06200000;
+	u8 *tmp = (u8*) (0x06200000 + 256*384 - 256*128);
+	NDS_DrawKeyboard(dst, src, tmp);
+}
 
 void NDS_InitVideo(void)
 {
+	// power on 2D engine, power off 3D engine
+	powerOn(POWER_ALL_2D);
+	powerOff(POWER_3D_CORE | POWER_MATRIX);
+
+	// init main engine
 	videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG3_ACTIVE);
 	vramSetPrimaryBanks(
 		VRAM_A_MAIN_BG_0x06000000,
@@ -48,22 +65,43 @@ void NDS_InitVideo(void)
 		VRAM_C_SUB_BG,
 		VRAM_D_LCD
 	);
-	consoleDemoInit();
 
 	REG_BG2CNT = BG_PRIORITY_0 | BG_BMP8_512x256;
 	REG_BG3CNT = BG_PRIORITY_1 | BG_BMP8_512x256;
 
 	REG_BLDCNT = BLEND_ALPHA | BLEND_SRC_BG2 | BLEND_DST_BG3;
-	REG_BLDALPHA = (8 * 0x101);
+	REG_BLDALPHA = 0x808;
+
+	// init sub engine
+	videoSetModeSub(MODE_3_2D | DISPLAY_BG3_ACTIVE);
+
+	REG_BG3CNT_SUB = BG_PRIORITY_0 | BG_BMP8_256x256;
+	REG_BG3PA_SUB = 256;
+	REG_BG3PB_SUB = 0;
+	REG_BG3PC_SUB = 0;
+	REG_BG3PD_SUB = 256;
+	REG_BG3X_SUB = 0;
+	REG_BG3Y_SUB = 0;
+
+	for (int i = 0; i < keyboardPalLen>>1; i++)
+		BG_PALETTE_SUB[i] = keyboardPal[i];
+
+	decompress(keyboardBitmap, (u8*) 0x06200000, LZ77Vram);
+
+	// set IRQs
+	irqSet(IRQ_VBLANK, vblankHandler);
+	irqEnable(IRQ_VBLANK);
 }
+
+#define NDS_ATARI_COLOR(i) \
+	( ((Colours_table[(i)] >> 19) & 0x1F) | \
+	  ((Colours_table[(i)] >> (11 - 5)) & (0x1F << 5)) | \
+	  ((Colours_table[(i)] << (-(3 - 10))) & (0x1F << 10)) )
 
 void PLATFORM_PaletteUpdate(void)
 {
 	for (int i = 0; i < 256; i++)
-		BG_PALETTE[i] =
-			((Colours_table[i] >> 19) & 0x1F) |
-			((Colours_table[i] >> (11 - 5)) & (0x1F << 5)) |
-			((Colours_table[i] << (-(3 - 10))) & (0x1F << 10));
+		BG_PALETTE[i] = NDS_ATARI_COLOR(i);
 }
 
 void PLATFORM_GetPixelFormat(PLATFORM_pixel_format_t *format)
@@ -79,12 +117,7 @@ void PLATFORM_MapRGB(void *dest, int const *palette, int size)
 	int i;
 	u16* target = (u16*) dest;
 	for (i = 0; i < size; i++)
-	{
-		target[i] =
-			((Colours_table[i] >> 19) & 0x1F) |
-			((Colours_table[i] >> (11 - 5)) & (0x1F << 5)) |
-			((Colours_table[i] << (-(3 - 10))) & (0x1F << 10));
-	}
+		target[i] = NDS_ATARI_COLOR(i);
 }
 
 void PLATFORM_SetVideoMode(VIDEOMODE_resolution_t const *res, int windowed, VIDEOMODE_MODE_t mode, int rotate90)
@@ -139,7 +172,7 @@ void PLATFORM_DisplayScreen(void)
 //	s16 sx = VIDEOMODE_src_width;
 //	s16 sy = VIDEOMODE_src_height * 4 / 3;
 	s16 sx = 320;
-	s16 sy = VIDEOMODE_src_height * 5 / 4;
+	s16 sy = VIDEOMODE_src_height * 4 / 3;
 	int offset_left = VIDEOMODE_src_offset_left + ((VIDEOMODE_src_width - 320) / 2);
 
 	static int i = 0;
@@ -164,9 +197,9 @@ void PLATFORM_DisplayScreen(void)
 		REG_BG3PD = sy;
 
 		REG_BG2X = 0 + (offset_left * 88);
-		REG_BG3X = 44 + (offset_left * 88);
+		REG_BG3X = -66 + (offset_left * 88);
 		REG_BG2Y = 0;
-		REG_BG3Y = 44;
+		REG_BG3Y = 64;
 	}
 
 	while (DMA_CR(3) & DMA_BUSY);

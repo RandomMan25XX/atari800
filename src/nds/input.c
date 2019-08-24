@@ -33,87 +33,89 @@
 #include "ui.h"
 #include "video.h"
 
+#include "keyboard.h"
+
 int key_control;
 int current_key_down = AKEY_NONE;
 int dpad_as_keyboard = 1;
-u64 key_down_time = 0;
+double key_down_time = 0;
 
-#define WARMSTART_HOLD_TIME 3*1000
+#define WARMSTART_HOLD_TIME 3
 #define AKEY_WAS_SHIFT_CTRL -992
 
 touch_area_t NDS_touch_areas_key[] = {
-	{ 2, 130, 22, 22, AKEY_ESCAPE, 0 },
-	{ 23, 130, 22, 22, AKEY_1, 0 },
-	{ 44, 130, 22, 22, AKEY_2, 0 },
-	{ 65, 130, 22, 22, AKEY_3, 0 },
-	{ 86, 130, 22, 22, AKEY_4, 0 },
-	{ 107, 130, 22, 22, AKEY_5, 0 },
-	{ 128, 130, 22, 22, AKEY_6, 0 },
-	{ 149, 130, 22, 22, AKEY_7, 0 },
-	{ 170, 130, 22, 22, AKEY_8, 0 },
-	{ 191, 130, 22, 22, AKEY_9, 0 },
-	{ 212, 130, 22, 22, AKEY_0, 0 },
-	{ 233, 130, 22, 22, AKEY_LESS, 0 },
-	{ 254, 130, 22, 22, AKEY_GREATER, 0 },
-	{ 275, 130, 22, 22, AKEY_BACKSPACE, 0 },
-	{ 296, 130, 22, 22, AKEY_BREAK, 0 },
+	{ 0, 102, 18, 18, AKEY_ESCAPE, 0 },
+	{ 17, 102, 18, 18, AKEY_1, 0 },
+	{ 34, 102, 18, 18, AKEY_2, 0 },
+	{ 51, 102, 18, 18, AKEY_3, 0 },
+	{ 68, 102, 18, 18, AKEY_4, 0 },
+	{ 85, 102, 18, 18, AKEY_5, 0 },
+	{ 102, 102, 18, 18, AKEY_6, 0 },
+	{ 119, 102, 18, 18, AKEY_7, 0 },
+	{ 136, 102, 18, 18, AKEY_8, 0 },
+	{ 153, 102, 18, 18, AKEY_9, 0 },
+	{ 170, 102, 18, 18, AKEY_0, 0 },
+	{ 187, 102, 18, 18, AKEY_LESS, 0 },
+	{ 204, 102, 18, 18, AKEY_GREATER, 0 },
+	{ 221, 102, 18, 18, AKEY_BACKSPACE, 0 },
+	{ 238, 102, 18, 18, AKEY_BREAK, 0 },
 
-	{ 2, 151, 34, 22, AKEY_TAB, 0 },
-	{ 35, 151, 22, 22, AKEY_q, 0 },
-	{ 56, 151, 22, 22, AKEY_w, 0 },
-	{ 77, 151, 22, 22, AKEY_e, 0 },
-	{ 98, 151, 22, 22, AKEY_r, 0 },
-	{ 119, 151, 22, 22, AKEY_t, 0 },
-	{ 140, 151, 22, 22, AKEY_y, 0 },
-	{ 161, 151, 22, 22, AKEY_u, 0 },
-	{ 182, 151, 22, 22, AKEY_i, 0 },
-	{ 203, 151, 22, 22, AKEY_o, 0 },
-	{ 224, 151, 22, 22, AKEY_p, 0 },
-	{ 245, 151, 22, 22, AKEY_MINUS, 0 },
-	{ 266, 151, 22, 22, AKEY_EQUAL, 0 },
-	{ 287, 151, 31, 22, AKEY_RETURN, 0 },
+	{ 0, 119, 28, 18, AKEY_TAB, 0 },
+	{ 27, 119, 18, 18, AKEY_q, 0 },
+	{ 44, 119, 18, 18, AKEY_w, 0 },
+	{ 61, 119, 18, 18, AKEY_e, 0 },
+	{ 78, 119, 18, 18, AKEY_r, 0 },
+	{ 95, 119, 18, 18, AKEY_t, 0 },
+	{ 112, 119, 18, 18, AKEY_y, 0 },
+	{ 129, 119, 18, 18, AKEY_u, 0 },
+	{ 146, 119, 18, 18, AKEY_i, 0 },
+	{ 163, 119, 18, 18, AKEY_o, 0 },
+	{ 180, 119, 18, 18, AKEY_p, 0 },
+	{ 197, 119, 18, 18, AKEY_MINUS, 0 },
+	{ 214, 119, 18, 18, AKEY_EQUAL, 0 },
+	{ 231, 119, 25, 18, AKEY_RETURN, 0 },
 
-	{ 2, 172, 37, 22, AKEY_CTRL, 0 },
-	{ 38, 172, 22, 22, AKEY_a, 0 },
-	{ 59, 172, 22, 22, AKEY_s, 0 },
-	{ 80, 172, 22, 22, AKEY_d, 0 },
-	{ 101, 172, 22, 22, AKEY_f, 0 },
-	{ 122, 172, 22, 22, AKEY_g, 0 },
-	{ 143, 172, 22, 22, AKEY_h, 0 },
-	{ 164, 172, 22, 22, AKEY_j, 0 },
-	{ 185, 172, 22, 22, AKEY_k, 0 },
-	{ 206, 172, 22, 22, AKEY_l, 0 },
-	{ 227, 172, 22, 22, AKEY_SEMICOLON, 0 },
-	{ 248, 172, 22, 22, AKEY_PLUS, 0 },
-	{ 269, 172, 22, 22, AKEY_ASTERISK, 0 },
-	{ 290, 172, 28, 22, AKEY_CAPSTOGGLE, 0 },
+	{ 0, 136, 31, 22, AKEY_CTRL, 0 },
+	{ 30, 136, 18, 18, AKEY_a, 0 },
+	{ 47, 136, 18, 18, AKEY_s, 0 },
+	{ 64, 136, 18, 18, AKEY_d, 0 },
+	{ 81, 136, 18, 18, AKEY_f, 0 },
+	{ 98, 136, 18, 18, AKEY_g, 0 },
+	{ 115, 136, 18, 18, AKEY_h, 0 },
+	{ 132, 136, 18, 18, AKEY_j, 0 },
+	{ 149, 136, 18, 18, AKEY_k, 0 },
+	{ 166, 136, 18, 18, AKEY_l, 0 },
+	{ 183, 136, 18, 18, AKEY_SEMICOLON, 0 },
+	{ 200, 136, 18, 18, AKEY_PLUS, 0 },
+	{ 217, 136, 18, 18, AKEY_ASTERISK, 0 },
+	{ 234, 136, 22, 18, AKEY_CAPSTOGGLE, 0 },
 
-	{ 2, 193, 43, 22, AKEY_SHFT, 0 },
-	{ 44, 193, 22, 22, AKEY_z, 0 },
-	{ 65, 193, 22, 22, AKEY_x, 0 },
-	{ 86, 193, 22, 22, AKEY_c, 0 },
-	{ 107, 193, 22, 22, AKEY_v, 0 },
-	{ 128, 193, 22, 22, AKEY_b, 0 },
-	{ 149, 193, 22, 22, AKEY_n, 0 },
-	{ 170, 193, 22, 22, AKEY_m, 0 },
-	{ 191, 193, 22, 22, AKEY_COMMA, 0 },
-	{ 212, 193, 22, 22, AKEY_FULLSTOP, 0 },
-	{ 233, 193, 22, 22, AKEY_SLASH, 0 },
-	{ 254, 193, 43, 22, AKEY_SHFT, 0 },
-	{ 296, 193, 22, 22, AKEY_ATARI, 0 },
+	{ 0, 153, 35, 18, AKEY_SHFT, 0 },
+	{ 34, 153, 18, 18, AKEY_z, 0 },
+	{ 51, 153, 18, 18, AKEY_x, 0 },
+	{ 68, 153, 18, 18, AKEY_c, 0 },
+	{ 85, 153, 18, 18, AKEY_v, 0 },
+	{ 102, 153, 18, 18, AKEY_b, 0 },
+	{ 119, 153, 18, 18, AKEY_n, 0 },
+	{ 136, 153, 18, 18, AKEY_m, 0 },
+	{ 153, 153, 18, 18, AKEY_COMMA, 0 },
+	{ 170, 153, 18, 18, AKEY_FULLSTOP, 0 },
+	{ 187, 153, 18, 18, AKEY_SLASH, 0 },
+	{ 204, 153, 35, 18, AKEY_SHFT, 0 },
+	{ 238, 153, 18, 18, AKEY_ATARI, 0 },
 
-	{ 64, 214, 190, 22, AKEY_SPACE, 0 },
+	{ 50, 170, 154, 18, AKEY_SPACE, 0 },
 
-	{ 153, 98, 32, 16, AKEY_HELP, TA_FLAG_SLANTED },
-	{ 186, 98, 32, 16, AKEY_START, TA_FLAG_SLANTED },
-	{ 219, 98, 32, 16, AKEY_SELECT, TA_FLAG_SLANTED },
-	{ 252, 98, 32, 16, AKEY_OPTION, TA_FLAG_SLANTED },
-	{ 285, 98, 32, 16, AKEY_WARMSTART, TA_FLAG_SLANTED }
+	{ 113, 78, 29, 14, AKEY_HELP, TA_FLAG_SLANTED },
+	{ 141, 78, 29, 14, AKEY_START, TA_FLAG_SLANTED },
+	{ 169, 78, 29, 14, AKEY_SELECT, TA_FLAG_SLANTED },
+	{ 197, 78, 29, 14, AKEY_OPTION, TA_FLAG_SLANTED },
+	{ 225, 78, 29, 14, AKEY_WARMSTART, TA_FLAG_SLANTED }
 };
 
 #define NDS_TOUCH_AREA_KEY_MAX (sizeof(NDS_touch_areas_key) / sizeof(touch_area_t))
 
-touch_area_t NDS_touch_areas_5200[] = {
+/* touch_area_t NDS_touch_areas_5200[] = {
 	{ 95, 73, 38, 22, AKEY_5200_1, 0 },
 	{ 141, 73, 38, 22, AKEY_5200_2, 0 },
 	{ 187, 73, 38, 22, AKEY_5200_3, 0 },
@@ -126,14 +128,17 @@ touch_area_t NDS_touch_areas_5200[] = {
 	{ 95, 181, 38, 22, AKEY_5200_ASTERISK, 0 },
 	{ 141, 181, 38, 22, AKEY_5200_0, 0 },
 	{ 187, 181, 38, 22, AKEY_5200_HASH, 0 }
-};
+}; */
 
-#define NDS_TOUCH_AREA_5200_MAX (sizeof(NDS_touch_areas_5200) / sizeof(touch_area_t))
+// #define NDS_TOUCH_AREA_5200_MAX (sizeof(NDS_touch_areas_5200) / sizeof(touch_area_t))
 
-#define NDS_TOUCH_AREAS ((Atari800_machine_type == Atari800_MACHINE_5200 && !UI_is_active) \
+/* #define NDS_TOUCH_AREAS ((Atari800_machine_type == Atari800_MACHINE_5200 && !UI_is_active) \
 		? NDS_touch_areas_5200 : NDS_touch_areas_key)
 #define NDS_TOUCH_AREA_MAX ((Atari800_machine_type == Atari800_MACHINE_5200 && !UI_is_active) \
-		? NDS_TOUCH_AREA_5200_MAX : NDS_TOUCH_AREA_KEY_MAX)
+		? NDS_TOUCH_AREA_5200_MAX : NDS_TOUCH_AREA_KEY_MAX) */
+
+#define NDS_TOUCH_AREAS NDS_touch_areas_key
+#define NDS_TOUCH_AREA_MAX NDS_TOUCH_AREA_KEY_MAX
 
 bool NDS_IsControlPressed()
 {
@@ -159,26 +164,31 @@ static bool isKeyTouched(touchPosition* pos, touch_area_t* area)
 	}
 }
 
-/* void NDS_DrawKeyboard(C3D_Tex *tex)
+static void copyTexture(u8 *dst, u8 *src, int x, int y, int w, int h)
+{
+	x &= ~1;
+	w &= ~1;
+
+	src += (y << 8) + x;
+	dst += (y << 8) + x;
+
+	for (int iy = 0; iy < h; iy++, src += 256 - w, dst += 256 - w)
+	for (int ix = 0; ix < w; ix+=2, src+=2, dst+=2)
+		*(u16*)(dst) = *(u16*)(src);
+}
+
+void NDS_DrawKeyboard(u8 *dst, u8 *src, u8 *tmp)
 {
 	touch_area_t* keyTable = NDS_TOUCH_AREAS;
 	int keyTableLen = NDS_TOUCH_AREA_MAX;
 
-	if (keyTable == NDS_touch_areas_5200)
-	{
-		NDS_DrawTexture(tex, 0, 0, 640, 0, 320, 240);
-		return;
-	}
-
 	touchPosition pos;
-	bool isTouch = ((hidKeysDown() | hidKeysHeld()) & KEY_TOUCH) != 0;
-
-	NDS_DrawTexture(tex, 0, 0, 0, 0, 320, 240);
+	bool isTouch = ((keysDown() | keysHeld()) & KEY_TOUCH) != 0;
 
 	int key_down = current_key_down;
 	if (key_down >= 0) key_down &= ~AKEY_SHFTCTRL;
 
-	hidTouchRead(&pos);
+	touchRead(&pos);
 	for (int i = 0; i < keyTableLen; i++)
 	{
 		touch_area_t* area = &keyTable[i];
@@ -192,18 +202,33 @@ static bool isKeyTouched(touchPosition* pos, touch_area_t* area)
 			) && isKeyTouched(&pos, area))
 		)
 		{
-			if (area->flags & TA_FLAG_SLANTED)
-			{
-				for (int i = 0; i < area->h; i++)
-					NDS_DrawTexture(tex, area->x - i, area->y + i,
-						area->x + 320 - i, area->y + i, area->w, 1);
+			// pressed
+			if (!(area->flags & TA_FLAG_PRESSED)) {
+				area->flags |= TA_FLAG_PRESSED;
+				if (area->flags & TA_FLAG_SLANTED)
+					for (int i = 0; i < area->h; i++)
+					{
+						copyTexture(tmp, src, area->x - i, area->y + i, area->w, 1);
+						copyTexture(src, dst, area->x - i, area->y + i, area->w, 1);
+					}
+				else
+				{
+					copyTexture(tmp, src, area->x, area->y, area->w, area->h);
+					copyTexture(src, dst, area->x, area->y, area->w, area->h);
+				}
 			}
+		} else if (area->flags & TA_FLAG_PRESSED)
+		{
+			// released
+			area->flags &= ~TA_FLAG_PRESSED;
+			if (area->flags & TA_FLAG_SLANTED)
+				for (int i = 0; i < area->h; i++)
+					copyTexture(src, tmp, area->x - i, area->y + i, area->w, 1);
 			else
-				NDS_DrawTexture(tex, area->x, area->y,
-					area->x + 320, area->y, area->w, area->h);
+				copyTexture(src, tmp, area->x, area->y, area->w, area->h);
 		}
 	}
-} */
+}
 
 void PLATFORM_SetJoystickKey(int joystick, int direction, int value)
 {
@@ -305,7 +330,7 @@ int PLATFORM_Keyboard(void)
 
 	if ((kDown | kHeld) & KEY_TOUCH)
 	{
-/*		hidTouchRead(&pos);
+		touchRead(&pos);
 		touch_area_t* keyTable = NDS_TOUCH_AREAS;
 		bool down = (kDown & KEY_TOUCH) != 0;
 		bool touching = ((kDown | kHeld) & KEY_TOUCH) != 0;
@@ -343,10 +368,10 @@ int PLATFORM_Keyboard(void)
 					case AKEY_WARMSTART:
 						if (down)
 						{
-							key_down_time = osGetTime();
+							key_down_time = PLATFORM_Time();
 							current_key_down = AKEY_NONE;
 							break;
-						} else if (touching && (osGetTime() - key_down_time) > WARMSTART_HOLD_TIME)
+						} else if (touching && (PLATFORM_Time() - key_down_time) > WARMSTART_HOLD_TIME)
 						{
 							Atari800_display_screen = TRUE;
 							return AKEY_WARMSTART;
@@ -362,7 +387,7 @@ int PLATFORM_Keyboard(void)
 		}
 
 		if (refresh) Atari800_display_screen = TRUE;
-		return current_key_down; */
+		return current_key_down;
 	}
 
 	return AKEY_NONE;
@@ -371,40 +396,28 @@ int PLATFORM_Keyboard(void)
 int PLATFORM_PORT(int num)
 {
 	int ret = 0xff;
-/*	if (num == 0) {
-		hidScanInput();
-		u32 kDown = hidKeysHeld();
+	if (num == 0) {
+		u32 kHeld = keysHeld();
 		if ((!dpad_as_keyboard || Atari800_machine_type == Atari800_MACHINE_5200) && !UI_is_active)
 		{
-			if (kDown & KEY_LEFT)
+			if (kHeld & KEY_LEFT)
 				ret &= 0xf0 | INPUT_STICK_LEFT;
-			if (kDown & KEY_RIGHT)
+			if (kHeld & KEY_RIGHT)
 				ret &= 0xf0 | INPUT_STICK_RIGHT;
-			if (kDown & KEY_UP)
+			if (kHeld & KEY_UP)
 				ret &= 0xf0 | INPUT_STICK_FORWARD;
-			if (kDown & KEY_DOWN)
-				ret &= 0xf0 | INPUT_STICK_BACK;
-		} else
-		{
-			if (kDown & KEY_CPAD_LEFT)
-				ret &= 0xf0 | INPUT_STICK_LEFT;
-			if (kDown & KEY_CPAD_RIGHT)
-				ret &= 0xf0 | INPUT_STICK_RIGHT;
-			if (kDown & KEY_CPAD_UP)
-				ret &= 0xf0 | INPUT_STICK_FORWARD;
-			if (kDown & KEY_CPAD_DOWN)
+			if (kHeld & KEY_DOWN)
 				ret &= 0xf0 | INPUT_STICK_BACK;
 		}
-	} */
+	}
 	return ret;
 }
 
 int PLATFORM_TRIG(int num)
 {
 	if (num == 0) {
-/*		hidScanInput();
-		if (hidKeysHeld() & KEY_A)
-			return 0; */
+		if (keysHeld() & KEY_A)
+			return 0;
 	}
 	return 1;
 }
