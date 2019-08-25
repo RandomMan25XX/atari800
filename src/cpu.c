@@ -185,11 +185,17 @@ UBYTE CPU_IRQ;
 #endif /* NEW_CYCLE_EXACT */
 
 /* 6502 registers. */
+DTCM_DATA
 UWORD CPU_regPC;
+DTCM_DATA
 UBYTE CPU_regA;
+DTCM_DATA
 UBYTE CPU_regX;
+DTCM_DATA
 UBYTE CPU_regY;
+DTCM_DATA
 UBYTE CPU_regP;						/* Processor Status Byte (Partial) */
+DTCM_DATA
 UBYTE CPU_regS;
 
 /* Transfer 6502 registers between global variables and local variables inside CPU_GO() */
@@ -197,11 +203,15 @@ UBYTE CPU_regS;
 #define UPDATE_LOCAL_REGS   SET_PC(CPU_regPC); S = CPU_regS; A = CPU_regA; X = CPU_regX; Y = CPU_regY
 
 /* 6502 flags local to this module */
+DTCM_DATA
 static UBYTE N;					/* bit7 set => N flag set */
 #ifndef NO_V_FLAG_VARIABLE
+DTCM_DATA
 static UBYTE V;                 /* non-zero => V flag set */
 #endif
+DTCM_DATA
 static UBYTE Z;					/* zero     => Z flag set */
+DTCM_DATA
 static UBYTE C;					/* must be 0 or 1 */
 /* B, D, I are always in CPU_regP */
 
@@ -2433,7 +2443,6 @@ void CPU_Reset(void)
 #ifdef MONITOR_PROFILE
 	memset(CPU_instruction_count, 0, sizeof(CPU_instruction_count));
 #endif
-
 	CPU_IRQ = 0;
 
 	CPU_regP = 0x34;				/* The unused bit is always 1, I flag set! */

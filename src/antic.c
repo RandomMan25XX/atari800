@@ -52,8 +52,10 @@
 #define LCHOP 3			/* do not build leftmost 0..3 characters in wide mode */
 #define RCHOP 3			/* do not build rightmost 0..3 characters in wide mode */
 
+DTCM_DATA
 int ANTIC_break_ypos = 999;
 #if !defined(BASIC) && !defined(CURSES_BASIC)
+DTCM_DATA
 static int gtia_bug_active = FALSE; /* The GTIA bug mode is active */
 #endif
 #ifdef NEW_CYCLE_EXACT
@@ -61,16 +63,24 @@ static void draw_partial_scanline(int l,int r);
 static void update_scanline_chbase(void);
 static void update_scanline_invert(void);
 static void update_scanline_blank(void);
+DTCM_DATA
 const int *ANTIC_cpu2antic_ptr;
+DTCM_DATA
 const int *ANTIC_antic2cpu_ptr;
 DTCM_DATA int ANTIC_delayed_wsync = 0;
+DTCM_DATA
 static int dmactl_changed = 0;
+DTCM_DATA
 static UBYTE delayed_DMACTL;
+DTCM_DATA
 static int draw_antic_ptr_changed = 0;
+DTCM_DATA
 static UBYTE need_load;
+DTCM_DATA
 static int dmactl_bug_chdata;
 #endif /* NEW_CYCLE_EXACT */
 #ifndef NO_SIMPLE_PAL_BLENDING
+DTCM_DATA
 int ANTIC_pal_blending = 0;
 #endif /* NO_SIMPLE_PAL_BLENDING */
 
@@ -235,6 +245,7 @@ UBYTE ANTIC_NMIST;
 /* ANTIC Memory ------------------------------------------------------------ */
 
 #if !defined(BASIC) && !defined(CURSES_BASIC)
+DTCM_DATA
 static UBYTE antic_memory[52];
 #define ANTIC_margin 4
 /* It's number of bytes in antic_memory, which are never loaded, but may be
@@ -247,6 +258,7 @@ static UBYTE antic_memory[52];
    This allows special optimisations under certain conditions.
    ------------------------------------------------------------------------ */
 
+DTCM_DATA
 static UWORD *scrn_ptr;
 #endif /* !defined(BASIC) && !defined(CURSES_BASIC) */
 
@@ -410,6 +422,7 @@ These are all cases:
 #define SCR_C	28
 #define VSCOF_C	112
 
+DTCM_DATA
 unsigned int ANTIC_screenline_cpu_clock = 0;
 
 #ifdef NEW_CYCLE_EXACT
@@ -443,6 +456,7 @@ DTCM_DATA int ANTIC_xpos = 0;
 DTCM_DATA int ANTIC_xpos_limit;
 DTCM_DATA int ANTIC_wsync_halt = FALSE;
 
+DTCM_DATA
 int ANTIC_ypos;						/* Line number - lines 8..247 are on screen */
 
 /* Timing in first line of modes 2-5
@@ -466,12 +480,19 @@ UBYTE ANTIC_PENV_input = 0xff;
 
 /* Internal ANTIC registers ------------------------------------------------ */
 
+DTCM_DATA
 static UWORD screenaddr;		/* Screen Pointer */
+DTCM_DATA
 static UBYTE IR;				/* Instruction Register */
+DTCM_DATA
 static UBYTE anticmode;			/* Antic mode */
+DTCM_DATA
 static UBYTE dctr;				/* Delta Counter */
+DTCM_DATA
 static UBYTE lastline;			/* dctr limit */
+DTCM_DATA
 static UBYTE need_dl;			/* boolean: fetch DL next line */
+DTCM_DATA
 static UBYTE vscrol_off;		/* boolean: displaying line ending VSC */
 
 #endif
@@ -486,22 +507,35 @@ static UBYTE vscrol_off;		/* boolean: displaying line ending VSC */
 #define SCROLL0 3				/* modes 2,3,4,5,0xd,0xe,0xf with HSC */
 #define SCROLL1 4				/* modes 6,7,0xa,0xb,0xc with HSC */
 #define SCROLL2 5				/* modes 8,9 with HSC */
+DTCM_DATA
 static int md;					/* current mode NORMAL0..SCROLL2 */
 /* tables for modes NORMAL0..SCROLL2 */
+DTCM_DATA
 static int chars_read[6];
+DTCM_DATA
 static int chars_displayed[6];
+DTCM_DATA
 static int x_min[6];
+DTCM_DATA
 static int ch_offset[6];
+DTCM_DATA
 static int load_cycles[6];
+DTCM_DATA
 static int font_cycles[6];
+DTCM_DATA
 static int before_cycles[6];
+DTCM_DATA
 static int extra_cycles[6];
 
 /* border parameters for current display width */
+DTCM_DATA
 static int left_border_chars;
+DTCM_DATA
 static int right_border_start;
 #ifdef NEW_CYCLE_EXACT
+DTCM_DATA
 static int left_border_start = LCHOP * 4;
+DTCM_DATA
 static int right_border_end = (48 - RCHOP) * 4;
 #define LBORDER_START left_border_start
 #define RBORDER_END right_border_end
@@ -511,22 +545,32 @@ static int right_border_end = (48 - RCHOP) * 4;
 #endif /* NEW_CYCLE_EXACT */
 
 /* set with CHBASE *and* CHACTL - bits 0..2 set if flip on */
+DTCM_DATA
 static UWORD chbase_20;			/* CHBASE for 20 character mode */
 
 /* set with CHACTL */
+DTCM_DATA
 static UBYTE invert_mask;
+DTCM_DATA
 static int blank_mask;
 
 /* A scanline of AN0 and AN1 signals as transmitted from ANTIC to GTIA.
    In every byte, bit 0 is AN0 and bit 1 is AN1 */
+DTCM_DATA
 static UBYTE an_scanline[Screen_atari_WIDTH / 2 + 8];
 
 /* lookup tables */
+DTCM_DATA
 static UBYTE blank_lookup[256];
+DTCM_DATA
 static UWORD lookup2[256];
+DTCM_DATA
 ULONG ANTIC_lookup_gtia9[16];
+DTCM_DATA
 ULONG ANTIC_lookup_gtia11[16];
+DTCM_DATA
 static UBYTE playfield_lookup[257];
+DTCM_DATA
 static UBYTE mode_e_an_lookup[256];
 
 /* Colour lookup table
@@ -557,6 +601,7 @@ static UBYTE mode_e_an_lookup[256];
    PF3 if (PRIOR & 0x1f) == 0x10, PF0 or PF1 otherwise.
    Additional column 'colls' holds collisions of playfields with PMG. */
 
+DTCM_DATA
 UWORD ANTIC_cl[128];
 
 #define C_PM0	0x01
@@ -676,7 +721,9 @@ UWORD ANTIC_cl[128];
 #define HIRES_LUM_10	0x000f
 #endif
 
+DTCM_DATA
 static UWORD hires_lookup_n[128];
+DTCM_DATA
 static UWORD hires_lookup_m[128];
 #define hires_norm(x)	hires_lookup_n[(x) >> 1]
 #define hires_mask(x)	hires_lookup_m[(x) >> 1]

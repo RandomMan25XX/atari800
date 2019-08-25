@@ -46,7 +46,7 @@
 #include "statesav.h"
 #endif
 
-UBYTE MEMORY_mem[65536 + 2];
+__attribute__((aligned(2))) UBYTE MEMORY_mem[65536 + 2];
 
 int MEMORY_ram_size = 64;
 

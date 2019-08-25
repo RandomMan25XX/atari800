@@ -25,8 +25,10 @@
 
 /* faster versions of MEMORY_jdGetWord and MEMORY_dPutWord for even addresses */
 /* TODO: guarantee that memory is UWORD-aligned and use UWORD access */
-#define MEMORY_dGetWordAligned(x)		MEMORY_dGetWord(x)
-#define MEMORY_dPutWordAligned(x, y)	MEMORY_dPutWord(x, y)
+#define MEMORY_dGetWordAligned(x)		UNALIGNED_GET_WORD(MEMORY_mem+(x), memory_read_aligned_word_stat)
+#define MEMORY_dPutWordAligned(x, y)	UNALIGNED_PUT_WORD(MEMORY_mem+(x), (y), memory_write_aligned_word_stat)
+//#define MEMORY_dGetWordAligned(x)		MEMORY_dGetWord(x)
+//#define MEMORY_dPutWordAligned(x, y)	MEMORY_dPutWord(x, y)
 #endif	/* WORDS_UNALIGNED_OK */
 #else	/* WORDS_BIGENDIAN */
 /* can't do any word optimizations for big endian machines */
