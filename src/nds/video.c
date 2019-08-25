@@ -47,7 +47,7 @@ void NDS_DrawKeyboard(u8 *dst, u8 *src, u8 *tmp);
 ITCM_CODE
 static void vblankHandler(void)
 {
-	if (((u32) Screen_atari) == 0x06000000) {
+	if (((u32) Screen_atari) != 0x06000000) {
 		REG_BG2CNT |= 0x10;
 		REG_BG3CNT |= 0x10;
 	} else {
@@ -142,20 +142,18 @@ void PLATFORM_SetVideoMode(VIDEOMODE_resolution_t const *res, int windowed, VIDE
 
 VIDEOMODE_resolution_t *PLATFORM_AvailableResolutions(unsigned int *size)
 {
-	VIDEOMODE_resolution_t *resolutions;
-	resolutions = Util_malloc(1 * sizeof(VIDEOMODE_resolution_t));
-	resolutions[0].width = 512;
-	resolutions[0].height = 512;
+	VIDEOMODE_resolution_t *resolutions = Util_malloc(sizeof(VIDEOMODE_resolution_t));
+	resolutions->width = 320;
+	resolutions->height = 240;
 	*size = 1;
 	return resolutions;
 }
 
 VIDEOMODE_resolution_t *PLATFORM_DesktopResolution(void)
 {
-	VIDEOMODE_resolution_t *resolutions;
-	resolutions = Util_malloc(1 * sizeof(VIDEOMODE_resolution_t));
-	resolutions[0].width = 512;
-	resolutions[0].height = 512;
+	VIDEOMODE_resolution_t *resolutions = Util_malloc(sizeof(VIDEOMODE_resolution_t));
+	resolutions->width = 320;
+	resolutions->height = 240;
 	return resolutions;
 }
 

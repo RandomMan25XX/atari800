@@ -165,6 +165,10 @@ extern int op_filtering;
 extern float op_zoom;
 #endif /* RPI */
 
+// FIXME atari800-nds
+#define UI_DPAD_AS_KEYBOARD
+extern int dpad_as_keyboard;
+
 UI_tDriver *UI_driver = &UI_BASIC_driver;
 
 int UI_is_active = FALSE;
@@ -3621,6 +3625,12 @@ static void ControllerConfiguration(void)
 	static char mouse_port_status[2] = { '1', '\0' };
 	static char mouse_speed_status[2] = { '1', '\0' };
 #endif
+	static const UI_tMenuItem dpad_map_menu_array[] = {
+		UI_MENU_ACTION(0, "Joystick"),
+		UI_MENU_ACTION(1, "Keyboard"),
+		UI_MENU_END
+	};
+
 	static UI_tMenuItem menu_array[] = {
 		UI_MENU_ACTION(0, "Joystick autofire:"),
 		UI_MENU_CHECK(1, "Enable MultiJoy4:"),
@@ -3631,9 +3641,10 @@ static void ControllerConfiguration(void)
 		UI_MENU_ACTION(10, "Joystick/D-Pad configuration"),
 		UI_MENU_ACTION(11, "Button configuration"),
 #else
-		UI_MENU_SUBMENU_SUFFIX(2, "Mouse device: ", NULL),
-		UI_MENU_SUBMENU_SUFFIX(3, "Mouse port:", mouse_port_status),
-		UI_MENU_SUBMENU_SUFFIX(4, "Mouse speed:", mouse_speed_status),
+		UI_MENU_SUBMENU_SUFFIX(9, "D-Pad maps to:", NULL),
+//		UI_MENU_SUBMENU_SUFFIX(2, "Mouse device: ", NULL),
+//		UI_MENU_SUBMENU_SUFFIX(3, "Mouse port:", mouse_port_status),
+//		UI_MENU_SUBMENU_SUFFIX(4, "Mouse speed:", mouse_speed_status),
 #endif
 #ifdef GUI_SDL
 		UI_MENU_CHECK(5, "Enable keyboard joystick 1:"),
@@ -3671,9 +3682,10 @@ static void ControllerConfiguration(void)
 #elif defined(DREAMCAST)
 		SetItemChecked(menu_array, 9, emulate_paddles);
 #else
-		menu_array[2].suffix = mouse_mode_menu_array[INPUT_mouse_mode].item;
+		menu_array[2].suffix = dpad_map_menu_array[dpad_as_keyboard].item;
+/*		menu_array[2].suffix = mouse_mode_menu_array[INPUT_mouse_mode].item;
 		mouse_port_status[0] = (char) ('1' + INPUT_mouse_port);
-		mouse_speed_status[0] = (char) ('0' + INPUT_mouse_speed);
+		mouse_speed_status[0] = (char) ('0' + INPUT_mouse_speed); */
 #endif
 #ifdef GUI_SDL
 		SetItemChecked(menu_array, 5, PLATFORM_kbd_joy_0_enabled);
@@ -3728,6 +3740,12 @@ static void ControllerConfiguration(void)
 			break;
 		case 4:
 			INPUT_mouse_speed = UI_driver->fSelectInt(INPUT_mouse_speed, 1, 9);
+			break;
+// FIXME atari800-nds
+		case 9:
+			option2 = UI_driver->fSelect(NULL, UI_SELECT_POPUP, dpad_as_keyboard, dpad_map_menu_array, NULL);
+			if (option2 >= 0)
+				dpad_as_keyboard = option2;
 			break;
 #endif
 #ifdef GUI_SDL

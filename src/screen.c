@@ -358,24 +358,36 @@ static void SmallFont_DrawChar(UBYTE *screen, int ch, UBYTE color1, UBYTE color2
 		}
 	};
 	int y;
-	for (y = 0; y < SMALLFONT_HEIGHT; y++) {
-		int src;
-		int mask;
-		src = font[ch][y];
-		for (mask = 1 << (SMALLFONT_WIDTH - 1); mask != 0; mask >>= 1) {
-			UBYTE rep = ((src & mask) != 0 ? color1 : color2);
-			UWORD *ptr = (UWORD*) (((ULONG)screen)&(~1));
-			if (!(((ULONG) screen) & 1)) {
-				// right pixel
-				*ptr = (*ptr & 0xFF00) | rep;
-			} else {
-				// left pixel
-				*ptr = (*ptr & 0x00FF) | (rep << 8);
+	if (((ULONG)screen) >= 0x06000000) // in VRAM, no 8-bit I/O
+		for (y = 0; y < SMALLFONT_HEIGHT; y++) {
+			int src;
+			int mask;
+			src = font[ch][y];
+			for (mask = 1 << (SMALLFONT_WIDTH - 1); mask != 0; mask >>= 1) {
+				UBYTE rep = ((src & mask) != 0 ? color1 : color2);
+				UWORD *ptr = (UWORD*) (((ULONG)screen)&(~1));
+				if (!(((ULONG) screen) & 1)) {
+					// right pixel
+					*ptr = (*ptr & 0xFF00) | rep;
+				} else {
+					// left pixel
+					*ptr = (*ptr & 0x00FF) | (rep << 8);
+				}
+				screen++;
 			}
-			screen++;
+			screen += Screen_WIDTH - SMALLFONT_WIDTH;
 		}
-		screen += Screen_WIDTH - SMALLFONT_WIDTH;
-	}
+	else
+		for (y = 0; y < SMALLFONT_HEIGHT; y++) {
+			int src;
+			int mask;
+			src = font[ch][y];
+			for (mask = 1 << (SMALLFONT_WIDTH - 1); mask != 0; mask >>= 1) {
+				*screen = ((src & mask) != 0 ? color1 : color2);
+				screen++;
+			}
+			screen += Screen_WIDTH - SMALLFONT_WIDTH;
+		}
 }
 
 /* Returns screen address for placing the next character on the left of the

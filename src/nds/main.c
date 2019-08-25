@@ -24,6 +24,7 @@
 
 #include <nds.h>
 #include <fat.h>
+#include <maxmod9.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -73,6 +74,14 @@ int PLATFORM_Initialise(int *argc, char *argv[])
 
 	NDS_InitVideo();
 	fatInitDefault();
+
+	mm_ds_system sys;
+	sys.mod_count = 0;
+	sys.samp_count = 0;
+	sys.mem_bank = 0;
+	sys.fifo_channel = FIFO_MAXMOD;
+	mmInit(&sys);
+
 	return TRUE;
 }
 

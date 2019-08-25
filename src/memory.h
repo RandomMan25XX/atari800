@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include <string.h>	/* memcpy, memset */
+#include <nds.h>
 
 #include "atari.h"
 
@@ -56,16 +57,16 @@ extern int MEMORY_ram_size;
 
 #ifndef PAGED_ATTRIB
 
-extern UBYTE MEMORY_attrib[65536];
+DTCM_DATA extern UBYTE MEMORY_attrib[256];
 /* Reads a byte from ADDR. Can potentially have side effects, when reading
    from hardware area. */
-#define MEMORY_GetByte(addr)		(MEMORY_attrib[addr] == MEMORY_HARDWARE ? MEMORY_HwGetByte(addr, FALSE) : MEMORY_mem[addr])
+#define MEMORY_GetByte(addr)		(MEMORY_attrib[(addr) >> 8] == MEMORY_HARDWARE ? MEMORY_HwGetByte(addr, FALSE) : MEMORY_mem[addr])
 /* Reads a byte from ADDR, but without any side effects. */
-#define MEMORY_SafeGetByte(addr)		(MEMORY_attrib[addr] == MEMORY_HARDWARE ? MEMORY_HwGetByte(addr, TRUE) : MEMORY_mem[addr])
-#define MEMORY_PutByte(addr, byte)	 do { if (MEMORY_attrib[addr] == MEMORY_RAM) MEMORY_mem[addr] = byte; else if (MEMORY_attrib[addr] == MEMORY_HARDWARE) MEMORY_HwPutByte(addr, byte); } while (0)
-#define MEMORY_SetRAM(addr1, addr2) memset(MEMORY_attrib + (addr1), MEMORY_RAM, (addr2) - (addr1) + 1)
-#define MEMORY_SetROM(addr1, addr2) memset(MEMORY_attrib + (addr1), MEMORY_ROM, (addr2) - (addr1) + 1)
-#define MEMORY_SetHARDWARE(addr1, addr2) memset(MEMORY_attrib + (addr1), MEMORY_HARDWARE, (addr2) - (addr1) + 1)
+#define MEMORY_SafeGetByte(addr)		(MEMORY_attrib[(addr) >> 8] == MEMORY_HARDWARE ? MEMORY_HwGetByte(addr, TRUE) : MEMORY_mem[addr])
+#define MEMORY_PutByte(addr, byte)	 do { if (MEMORY_attrib[(addr) >> 8] == MEMORY_RAM) MEMORY_mem[addr] = byte; else if (MEMORY_attrib[(addr) >> 8] == MEMORY_HARDWARE) MEMORY_HwPutByte(addr, byte); } while (0)
+#define MEMORY_SetRAM(addr1, addr2) memset(MEMORY_attrib + ((addr1) >> 8), MEMORY_RAM, ((addr2) >> 8) - ((addr1) >> 8) + 1)
+#define MEMORY_SetROM(addr1, addr2) memset(MEMORY_attrib + ((addr1) >> 8), MEMORY_ROM, ((addr2) >> 8) - ((addr1) >> 8) + 1)
+#define MEMORY_SetHARDWARE(addr1, addr2) memset(MEMORY_attrib + ((addr1) >> 8), MEMORY_HARDWARE, ((addr2) >> 8) - ((addr1) >> 8) + 1)
 
 #else /* PAGED_ATTRIB */
 

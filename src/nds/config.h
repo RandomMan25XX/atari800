@@ -145,7 +145,7 @@
 /* #undef HAVE_LIBPNG */
 
 /* Define to 1 if you have the `z' library (-lz). */
-/* #undef HAVE_LIBZ */
+#define HAVE_LIBZ 1
 
 /* Define to 1 if you have the `localtime' function. */
 #define HAVE_LOCALTIME 1
@@ -340,7 +340,7 @@
 /* #undef HAVE__MKDIR */
 
 /* Define to add IDE harddisk emulation. */
-#define IDE 1
+// #define IDE 1
 
 /* Define to allow sound interpolation. */
 /* #undef INTERPOLATE_SOUND */

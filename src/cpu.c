@@ -161,7 +161,7 @@ UBYTE CPU_IRQ;
 #ifdef NEW_CYCLE_EXACT
 #ifndef PAGED_ATTRIB
 #define RMW_GetByte(x, addr) \
-	if (MEMORY_attrib[addr] == MEMORY_HARDWARE) { \
+	if (MEMORY_attrib[(addr) >> 8] == MEMORY_HARDWARE) { \
 		x = MEMORY_HwGetByte(addr, FALSE); \
 		if ((addr & 0xed00) == 0xc000) { \
 			ANTIC_xpos--; \

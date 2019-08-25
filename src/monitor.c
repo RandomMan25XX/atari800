@@ -2319,7 +2319,7 @@ static void monitor_change_mem(UWORD *addr)
 		if (MEMORY_writemap[*addr >> 8] != NULL && MEMORY_writemap[*addr >> 8] != MEMORY_ROM_PutByte)
 			(*MEMORY_writemap[*addr >> 8])(*addr, (UBYTE) temp);
 #else
-		if (MEMORY_attrib[*addr] == MEMORY_HARDWARE)
+		if (MEMORY_attrib[(*addr) >> 8] == MEMORY_HARDWARE)
 			MEMORY_HwPutByte(*addr, (UBYTE) temp);
 #endif
 		else /* RAM, ROM */
@@ -2330,7 +2330,7 @@ static void monitor_change_mem(UWORD *addr)
 			if (MEMORY_writemap[*addr >> 8] != NULL && MEMORY_writemap[*addr >> 8] != MEMORY_ROM_PutByte)
 				(*MEMORY_writemap[*addr >> 8])(*addr, (UBYTE) (temp >> 8));
 #else
-			if (MEMORY_attrib[*addr] == MEMORY_HARDWARE)
+			if (MEMORY_attrib[(*addr) >> 8] == MEMORY_HARDWARE)
 				MEMORY_HwPutByte(*addr, (UBYTE) (temp >> 8));
 #endif
 			else /* RAM, ROM */

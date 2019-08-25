@@ -37,7 +37,7 @@
 
 int key_control;
 int current_key_down = AKEY_NONE;
-int dpad_as_keyboard = 1;
+int dpad_as_keyboard = 0;
 double key_down_time = 0;
 
 #define WARMSTART_HOLD_TIME 3
@@ -401,6 +401,7 @@ int PLATFORM_PORT(int num)
 {
 	int ret = 0xff;
 	if (num == 0) {
+		scanKeys();
 		u32 kHeld = keysHeld();
 		if ((!dpad_as_keyboard || Atari800_machine_type == Atari800_MACHINE_5200) && !UI_is_active)
 		{
@@ -420,6 +421,7 @@ int PLATFORM_PORT(int num)
 int PLATFORM_TRIG(int num)
 {
 	if (num == 0) {
+		scanKeys();
 		if (keysHeld() & KEY_A)
 			return 0;
 	}

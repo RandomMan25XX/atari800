@@ -52,7 +52,8 @@ int MEMORY_ram_size = 64;
 
 #ifndef PAGED_ATTRIB
 
-UBYTE MEMORY_attrib[65536];
+DTCM_DATA
+UBYTE MEMORY_attrib[256];
 
 #else /* PAGED_ATTRIB */
 
@@ -368,7 +369,12 @@ void MEMORY_StateSave(UBYTE SaveVerbose)
 	StateSav_SaveUBYTE(&MEMORY_mem[0], 65536);
 	STATESAV_TAG(base_ram_attrib);
 #ifndef PAGED_ATTRIB
-	StateSav_SaveUBYTE(&MEMORY_attrib[0], 65536);
+	UBYTE attrib_page[256];
+	int i;
+	for (i = 0; i < 256; i++) {
+		memset(attrib_page, MEMORY_attrib[i], 256);
+		StateSav_SaveUBYTE(&attrib_page[0], 256);
+	}
 #else
 	{
 		/* I assume here that consecutive calls to StateSav_SaveUBYTE()
@@ -484,7 +490,14 @@ void MEMORY_StateRead(UBYTE SaveVerbose, UBYTE StateVersion)
 		StateSav_ReadINT(&base_ram_kb, 1);
 	StateSav_ReadUBYTE(&MEMORY_mem[0], 65536);
 #ifndef PAGED_ATTRIB
-	StateSav_ReadUBYTE(&MEMORY_attrib[0], 65536);
+	UBYTE attrib_page[256];
+	int i;
+	for (i = 0; i < 256; i++) {
+		StateSav_SaveUBYTE(&attrib_page[0], 256);
+		/* note: 0x40 is intentional here:
+		   we want ROM on page 0xd1 if H: patches are enabled */
+		MEMORY_attrib[i] = attrib_page[0x40];
+	}
 #else
 	{
 		UBYTE attrib_page[256];
