@@ -47,7 +47,7 @@ void NDS_DrawKeyboard(u8 *dst, u8 *src, u8 *tmp);
 ITCM_CODE
 static void vblankHandler(void)
 {
-	if (((u32) Screen_atari) != 0x06000000) {
+	if (((u32) Screen_atari) == 0x06000000) {
 		REG_BG2CNT |= 0x10;
 		REG_BG3CNT |= 0x10;
 	} else {

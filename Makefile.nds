@@ -107,16 +107,14 @@ SOURCES = \
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-ARCH	:=	-mthumb -mthumb-interwork -march=armv5te -mtune=arm946e-s
+ARCH	:=	-marm -mthumb-interwork -march=armv5te -mtune=arm946e-s
 
-CFLAGS	:=	-g -Wall -O2 -flto=jobserver -mword-relocations -D_GNU_SOURCE \
+CFLAGS	:=	-g -Wall -O3 -flto=jobserver -D_GNU_SOURCE \
 			-fomit-frame-pointer -ffast-math \
 			$(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -DNDS -DARM9
-
-CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
-
+CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 

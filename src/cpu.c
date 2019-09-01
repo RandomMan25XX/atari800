@@ -108,9 +108,9 @@ UBYTE CPU_IRQ;
 /* Windows headers define it */
 #undef ABSOLUTE
 
-#ifndef __GNUC__
-#define NO_GOTO
-#endif
+//#ifndef __GNUC__
+//#define NO_GOTO
+//#endif
 
 /* #define CYCLES_PER_OPCODE */
 
@@ -401,7 +401,7 @@ void CPU_GO(int limit)
 #else
 #define OPCODE_ALIAS(code)	opcode_##code:
 #define DONE				goto next;
-	DTCM_DATA static const void *opcode[256] =
+	static const void *opcode[256] =
 	{
 		&&opcode_00, &&opcode_01, &&opcode_02, &&opcode_03,
 		&&opcode_04, &&opcode_05, &&opcode_06, &&opcode_07,

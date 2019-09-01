@@ -79,9 +79,10 @@ DTCM_DATA static int audio_paused = 0;
 mm_word NDS_AudioCallback(mm_word length, mm_addr dest, mm_stream_formats format)
 {
 	if (audio_paused) {
-		return 0;
+		memset(dest, 0, length * NDS_sampleSize);
+	} else {
+		Sound_Callback(dest, length * NDS_sampleSize);
 	}
-	Sound_Callback(dest, length * NDS_sampleSize);
 	return length;
 }
 

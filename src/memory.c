@@ -46,7 +46,7 @@
 #include "statesav.h"
 #endif
 
-__attribute__((aligned(2))) UBYTE MEMORY_mem[65536 + 2];
+__attribute__((aligned(4))) UBYTE MEMORY_mem[65536 + 2];
 
 int MEMORY_ram_size = 64;
 
@@ -1077,6 +1077,7 @@ void MEMORY_GetCharset(UBYTE *cs)
 }
 
 #ifndef PAGED_MEM
+ITCM_CODE
 UBYTE MEMORY_HwGetByte(UWORD addr, int no_side_effects)
 {
 	UBYTE byte = 0xff;
@@ -1159,6 +1160,7 @@ UBYTE MEMORY_HwGetByte(UWORD addr, int no_side_effects)
 	return byte;
 }
 
+ITCM_CODE
 void MEMORY_HwPutByte(UWORD addr, UBYTE byte)
 {
 	switch (addr & 0xff00) {
