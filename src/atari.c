@@ -29,7 +29,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_SIGNAL_H
+#if defined(HAVE_SIGNAL_H) && !defined(LIBATARI800)
+#define CTRL_C_HANDLER
 #include <signal.h>
 #endif
 #ifdef HAVE_UNISTD_H
@@ -73,6 +74,9 @@
 #include "monitor.h"
 #ifdef IDE
 #  include "ide.h"
+#endif
+#ifdef POKEYREC
+#include "pokeyrec.h"
 #endif
 #include "pia.h"
 #include "platform.h"
@@ -173,7 +177,7 @@ int Atari800_auto_frameskip = FALSE;
 static double benchmark_start_time;
 #endif
 
-#ifdef HAVE_SIGNAL
+#ifdef CTRL_C_HANDLER
 volatile sig_atomic_t sigint_flag = FALSE;
 
 static RETSIGTYPE sigint_handler(int num)
@@ -732,6 +736,9 @@ int Atari800_Initialise(int *argc, char *argv[])
 #ifdef IDE
 		|| !IDE_Initialise(argc, argv)
 #endif
+#ifdef POKEYREC
+		|| !POKEYREC_Initialise(argc, argv)
+#endif
 		|| !SIO_Initialise (argc, argv)
 		|| !CARTRIDGE_Initialise(argc, argv)
 		|| !CASSETTE_Initialise(argc, argv)
@@ -869,7 +876,7 @@ int Atari800_Initialise(int *argc, char *argv[])
 	}
 #endif
 
-#ifdef HAVE_SIGNAL
+#ifdef CTRL_C_HANDLER
 	/* Install CTRL-C Handler */
 	signal(SIGINT, sigint_handler);
 #endif
@@ -946,10 +953,10 @@ int Atari800_Exit(int run_monitor)
 	}
 #endif /* STAT_UNALIGNED_WORDS */
 	restart = PLATFORM_Exit(run_monitor);
-#ifdef HAVE_SIGNAL
+#ifdef CTRL_C_HANDLER
 	/* If a user pressed Ctrl+C in the monitor, avoid immediate return to it. */
 	sigint_flag = FALSE;
-#endif /* HAVE_SIGNAL */
+#endif /* CTRL_C_HANDLER */
 #ifndef __PLUS
 	if (!restart) {
 		/* We'd better save the configuration before calling the *_Exit() functions -
@@ -980,6 +987,9 @@ int Atari800_Exit(int run_monitor)
 		SIO_Exit();	/* umount disks, so temporary files are deleted */
 #ifdef IDE
 		IDE_Exit();
+#endif
+#ifdef POKEYREC
+		POKEYREC_Exit();
 #endif
 		Devices_Exit();
 #ifdef R_IO_DEVICE
@@ -1218,13 +1228,13 @@ void Atari800_Frame(void)
 #ifndef BASIC
 	static int refresh_counter = 0;
 
-#ifdef HAVE_SIGNAL
+#ifdef CTRL_C_HANDLER
 	if (sigint_flag) {
 		sigint_flag = FALSE;
 		INPUT_key_code = AKEY_UI;
 		UI_alt_function = UI_MENU_MONITOR;
 	}
-#endif /* HAVE_SIGNAL */
+#endif /* CTRL_C_HANDLER */
 
 	switch (INPUT_key_code) {
 	case AKEY_COLDSTART:

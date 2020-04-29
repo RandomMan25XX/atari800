@@ -778,6 +778,8 @@ static void MakeBlankDisk(FILE *setFile)
 		fwrite(sector, 1, sizeof(sector), setFile);
 }
 
+int UI_show_hidden_files = FALSE;
+
 static void DiskManagement(void)
 {
 	static char drive_array[8][5] = { " D1:", " D2:", " D3:", " D4:", " D5:", " D6:", " D7:", " D8:" };
@@ -796,6 +798,7 @@ static void DiskManagement(void)
 		UI_MENU_ACTION(10, "Rotate Disks"),
 		UI_MENU_FILESEL(11, "Make Blank ATR Disk"),
 		UI_MENU_FILESEL_TIP(12, "Uncompress Disk Image", "Convert GZ or DCM to ATR"),
+		UI_MENU_CHECK(13, "Show hidden files/directories:"),
 		UI_MENU_END
 	};
 
@@ -824,6 +827,8 @@ static void DiskManagement(void)
 				break;
 			}
 		}
+
+		SetItemChecked(menu_array, 13, UI_show_hidden_files);
 
 		dsknum = UI_driver->fSelect("Disk Management", 0, dsknum, menu_array, &seltype);
 
@@ -958,6 +963,9 @@ static void DiskManagement(void)
 					break;
 				}
 			}
+			break;
+		case 13:
+			UI_show_hidden_files = !UI_show_hidden_files;
 			break;
 		default:
 			if (dsknum < 0)
