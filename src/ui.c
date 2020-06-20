@@ -100,6 +100,10 @@
 #endif /* HAVE_OPENGL */
 #endif /* GUI_SDL */
 
+#ifdef _3DS
+#include "3ds/video.h"
+#endif /* _3DS */
+
 #ifdef DIRECTX
 /* Display Settings */
 extern RENDERMODE rendermode;
@@ -2310,6 +2314,9 @@ static void VideoModeSettings(void)
 #endif /* HAVE_OPENGL */
 		UI_MENU_CHECK(9, "Vertical synchronization:"),
 #endif /* GUI_SDL */
+#ifdef _3DS
+		UI_MENU_CHECK(9, "Vertical synchronization:"),
+#endif /* _3DS */
 		UI_MENU_SUBMENU_SUFFIX(10, "Image aspect ratio:", NULL),
 		UI_MENU_SUBMENU_SUFFIX(11, "Stretch image:", NULL),
 		UI_MENU_SUBMENU_SUFFIX(12, "Fit screen method:", NULL),
@@ -2354,6 +2361,10 @@ static void VideoModeSettings(void)
 		snprintf(scanlines_string, sizeof(scanlines_string), "%d", SDL_VIDEO_scanlines_percentage);
 		SetItemChecked(menu_array, 18, SDL_VIDEO_interpolate_scanlines);
 #endif /* GUI_SDL */
+#ifdef _3DS
+		FindMenuItem(menu_array, 9)->flags = UI_ITEM_CHECK;
+		SetItemChecked(menu_array, 9, N3DS_IsVsyncEnabled());
+#endif /* _3DS */
 		SetItemChecked(menu_array, 4, !VIDEOMODE_windowed);
 		VIDEOMODE_CopyResolutionName(VIDEOMODE_GetFullscreenResolution(), res_string, 10);
 #if SUPPORTS_ROTATE_VIDEOMODE
@@ -2482,6 +2493,11 @@ static void VideoModeSettings(void)
 				UI_driver->fMessage("Not available in this video mode.", 1);
 			break;
 #endif /* GUI_SDL */
+#ifdef _3DS
+		case 9:
+			N3DS_ToggleVsync();
+			break;
+#endif /* _3DS */
 		case 10:
 			option2 = UI_driver->fSelect(NULL, UI_SELECT_POPUP, VIDEOMODE_keep_aspect, aspect_menu_array, NULL);
 			if (option2 >= 0)
