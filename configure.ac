@@ -21,7 +21,7 @@ dnl   along with Atari800; if not, write to the Free Software
 dnl   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 AC_PREREQ(2.57)
-AC_INIT(Atari800, 4.1.0, pstehlik@sophics.cz)
+AC_INIT(Atari800, 4.2.0, pstehlik@sophics.cz)
 AC_CONFIG_SRCDIR(src/atari.c)
 AC_CONFIG_HEADER(src/config.h)
 AC_CONFIG_MACRO_DIR([m4])
@@ -108,6 +108,9 @@ case $host_os in
         ;;
     linux | linux-gnu)
         a8_host="linux"
+        ;;
+    darwin*)
+        a8_host="macos"
         ;;
     mint)
         if [[ "$a8_target" = "firebee" ]]; then
@@ -315,7 +318,7 @@ case "$a8_target" in
 dnl In DJGPP building with zlib fails with -ansi.
             CFLAGS="$CFLAGS -ansi"
         fi
-        CFLAGS="$CFLAGS -pedantic -Waggregate-return -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Winline"
+        CFLAGS="$CFLAGS -pedantic -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Winline"
         if [[ "$a8_host" != "beos" ]]; then
 dnl BeOS has a real issue with redundant-decls
             CFLAGS="$CFLAGS -Wredundant-decls"
@@ -378,7 +381,7 @@ dnl BeOS has a real issue with redundant-decls
         A8_NEED_LIB(stdc++)
         A8_NEED_LIB(ws2_32)
         A8_NEED_LIB(gdi32)
-        CFLAGS="$CFLAGS -ansi -pedantic -Waggregate-return -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wstrict-prototypes -Winline"
+        CFLAGS="$CFLAGS -ansi -pedantic -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wstrict-prototypes -Winline"
         LDFLAGS="$LDFLAGS -mwindows"
         ;;
     libatari800)
@@ -1204,13 +1207,15 @@ if [[ "$SUPPORTS_RDEVICE" = "yes" ]]; then
                  [Use IP network connection with the R: networking device (Linux/Unix/Win32) (default=ON)],
                  R_NETWORK,[Define to use IP network connection with the R: device.]
                 )
-        if [[ "$a8_host" != "win" ]]; then
+        if [[ "$a8_host" != "win" -a "$a8_host" != "macos" ]]; then
             A8_OPTION(rserial,yes,
                      [Use the host serial port with the R: networking device (Linux/Unix only) (default=ON)],
                      R_SERIAL,[Define to use the host serial port with the R: device.]
                     )
-        else
-            A8_NEED_LIB(ws2_32)
+        else 
+            if [[ "$a8_host" = "win" ]]; then
+                A8_NEED_LIB(ws2_32)
+            fi
             WANT_R_SERIAL="no"
         fi
     fi
@@ -1230,6 +1235,7 @@ AC_CONFIG_FILES([
 Makefile
 DOC/Makefile
 src/Makefile
+tools/Makefile
 ])
 if [[ "$a8_target" = "android" ]]; then
 	AC_CONFIG_FILES(src/android/jni/Android.mk)
@@ -1310,9 +1316,9 @@ if [[ "$a8_target" = "windx" ]]; then
 fi
 if [[ "$SUPPORTS_RDEVICE" = "yes" ]]; then
     echo "Using R: device?......................: $WANT_R_IO_DEVICE"
-        if [[ "$a8_host" != "win" -a "$WANT_R_IO_DEVICE" = "yes" ]]; then
-            echo "Using R: with the host serial port?...: $WANT_R_SERIAL"
-            echo "Using R: with IP network support......: $WANT_R_NETWORK"
+        if [[ "$a8_host" != "win" -a "$a8_host" != "macos" -a "$WANT_R_IO_DEVICE" = "yes" ]]; then
+            echo "    Using R: with the host serial port?...: $WANT_R_SERIAL"
+            echo "    Using R: with IP network support......: $WANT_R_NETWORK"
         fi
 fi
 if [[ "$a8_target" = default -a "$with_video" = sdl ]]; then

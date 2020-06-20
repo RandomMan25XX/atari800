@@ -1012,98 +1012,32 @@ static void DiskManagement(void)
 
 int UI_SelectCartType(int k)
 {
-	static UI_tMenuItem menu_array[] = {
-		UI_MENU_ACTION(CARTRIDGE_STD_8, CARTRIDGE_STD_8_DESC),
-		UI_MENU_ACTION(CARTRIDGE_STD_16, CARTRIDGE_STD_16_DESC),
-		UI_MENU_ACTION(CARTRIDGE_OSS_034M_16, CARTRIDGE_OSS_034M_16_DESC),
-		UI_MENU_ACTION(CARTRIDGE_5200_32, CARTRIDGE_5200_32_DESC),
-		UI_MENU_ACTION(CARTRIDGE_DB_32, CARTRIDGE_DB_32_DESC),
-		UI_MENU_ACTION(CARTRIDGE_5200_EE_16, CARTRIDGE_5200_EE_16_DESC),
-		UI_MENU_ACTION(CARTRIDGE_5200_40, CARTRIDGE_5200_40_DESC),
-		UI_MENU_ACTION(CARTRIDGE_WILL_64, CARTRIDGE_WILL_64_DESC),
-		UI_MENU_ACTION(CARTRIDGE_EXP_64, CARTRIDGE_EXP_64_DESC),
-		UI_MENU_ACTION(CARTRIDGE_DIAMOND_64, CARTRIDGE_DIAMOND_64_DESC),
-		UI_MENU_ACTION(CARTRIDGE_SDX_64, CARTRIDGE_SDX_64_DESC),
-		UI_MENU_ACTION(CARTRIDGE_XEGS_32, CARTRIDGE_XEGS_32_DESC),
-		UI_MENU_ACTION(CARTRIDGE_XEGS_07_64, CARTRIDGE_XEGS_07_64_DESC),
-		UI_MENU_ACTION(CARTRIDGE_XEGS_128, CARTRIDGE_XEGS_128_DESC),
-		UI_MENU_ACTION(CARTRIDGE_OSS_M091_16, CARTRIDGE_OSS_M091_16_DESC),
-		UI_MENU_ACTION(CARTRIDGE_5200_NS_16, CARTRIDGE_5200_NS_16_DESC),
-		UI_MENU_ACTION(CARTRIDGE_ATRAX_DEC_128, CARTRIDGE_ATRAX_DEC_128_DESC),
-		UI_MENU_ACTION(CARTRIDGE_BBSB_40, CARTRIDGE_BBSB_40_DESC),
-		UI_MENU_ACTION(CARTRIDGE_5200_8, CARTRIDGE_5200_8_DESC),
-		UI_MENU_ACTION(CARTRIDGE_5200_4, CARTRIDGE_5200_4_DESC),
-		UI_MENU_ACTION(CARTRIDGE_RIGHT_8, CARTRIDGE_RIGHT_8_DESC),
-		UI_MENU_ACTION(CARTRIDGE_WILL_32, CARTRIDGE_WILL_32_DESC),
-		UI_MENU_ACTION(CARTRIDGE_XEGS_256, CARTRIDGE_XEGS_256_DESC),
-		UI_MENU_ACTION(CARTRIDGE_XEGS_512, CARTRIDGE_XEGS_512_DESC),
-		UI_MENU_ACTION(CARTRIDGE_XEGS_1024, CARTRIDGE_XEGS_1024_DESC),
-		UI_MENU_ACTION(CARTRIDGE_MEGA_16, CARTRIDGE_MEGA_16_DESC),
-		UI_MENU_ACTION(CARTRIDGE_MEGA_32, CARTRIDGE_MEGA_32_DESC),
-		UI_MENU_ACTION(CARTRIDGE_MEGA_64, CARTRIDGE_MEGA_64_DESC),
-		UI_MENU_ACTION(CARTRIDGE_MEGA_128, CARTRIDGE_MEGA_128_DESC),
-		UI_MENU_ACTION(CARTRIDGE_MEGA_256, CARTRIDGE_MEGA_256_DESC),
-		UI_MENU_ACTION(CARTRIDGE_MEGA_512, CARTRIDGE_MEGA_512_DESC),
-		UI_MENU_ACTION(CARTRIDGE_MEGA_1024, CARTRIDGE_MEGA_1024_DESC),
-		UI_MENU_ACTION(CARTRIDGE_SWXEGS_32, CARTRIDGE_SWXEGS_32_DESC),
-		UI_MENU_ACTION(CARTRIDGE_SWXEGS_64, CARTRIDGE_SWXEGS_64_DESC),
-		UI_MENU_ACTION(CARTRIDGE_SWXEGS_128, CARTRIDGE_SWXEGS_128_DESC),
-		UI_MENU_ACTION(CARTRIDGE_SWXEGS_256, CARTRIDGE_SWXEGS_256_DESC),
-		UI_MENU_ACTION(CARTRIDGE_SWXEGS_512, CARTRIDGE_SWXEGS_512_DESC),
-		UI_MENU_ACTION(CARTRIDGE_SWXEGS_1024, CARTRIDGE_SWXEGS_1024_DESC),
-		UI_MENU_ACTION(CARTRIDGE_PHOENIX_8, CARTRIDGE_PHOENIX_8_DESC),
-		UI_MENU_ACTION(CARTRIDGE_BLIZZARD_16, CARTRIDGE_BLIZZARD_16_DESC),
-		UI_MENU_ACTION(CARTRIDGE_ATMAX_128, CARTRIDGE_ATMAX_128_DESC),
-		UI_MENU_ACTION(CARTRIDGE_ATMAX_1024, CARTRIDGE_ATMAX_1024_DESC),
-		UI_MENU_ACTION(CARTRIDGE_SDX_128, CARTRIDGE_SDX_128_DESC),
-		UI_MENU_ACTION(CARTRIDGE_OSS_8, CARTRIDGE_OSS_8_DESC),
-		UI_MENU_ACTION(CARTRIDGE_OSS_043M_16, CARTRIDGE_OSS_043M_16_DESC),
-		UI_MENU_ACTION(CARTRIDGE_BLIZZARD_4, CARTRIDGE_BLIZZARD_4_DESC),
-		UI_MENU_ACTION(CARTRIDGE_AST_32, CARTRIDGE_AST_32_DESC),
-		UI_MENU_ACTION(CARTRIDGE_ATRAX_SDX_64, CARTRIDGE_ATRAX_SDX_64_DESC),
-		UI_MENU_ACTION(CARTRIDGE_ATRAX_SDX_128, CARTRIDGE_ATRAX_SDX_128_DESC),
-		UI_MENU_ACTION(CARTRIDGE_TURBOSOFT_64, CARTRIDGE_TURBOSOFT_64_DESC),
-		UI_MENU_ACTION(CARTRIDGE_TURBOSOFT_128, CARTRIDGE_TURBOSOFT_128_DESC),
-		UI_MENU_ACTION(CARTRIDGE_ULTRACART_32, CARTRIDGE_ULTRACART_32_DESC),
-		UI_MENU_ACTION(CARTRIDGE_LOW_BANK_8, CARTRIDGE_LOW_BANK_8_DESC),
-		UI_MENU_ACTION(CARTRIDGE_SIC_128, CARTRIDGE_SIC_128_DESC),
-		UI_MENU_ACTION(CARTRIDGE_SIC_256, CARTRIDGE_SIC_256_DESC),
-		UI_MENU_ACTION(CARTRIDGE_SIC_512, CARTRIDGE_SIC_512_DESC),
-		UI_MENU_ACTION(CARTRIDGE_STD_2, CARTRIDGE_STD_2_DESC),
-		UI_MENU_ACTION(CARTRIDGE_STD_4, CARTRIDGE_STD_4_DESC),
-		UI_MENU_ACTION(CARTRIDGE_RIGHT_4, CARTRIDGE_RIGHT_4_DESC),
-		UI_MENU_ACTION(CARTRIDGE_BLIZZARD_32, CARTRIDGE_BLIZZARD_32_DESC),
-		UI_MENU_ACTION(CARTRIDGE_MEGAMAX_2048, CARTRIDGE_MEGAMAX_2048_DESC),
-		UI_MENU_ACTION(CARTRIDGE_THECART_128M, CARTRIDGE_THECART_128M_DESC),
-		UI_MENU_ACTION(CARTRIDGE_MEGA_4096, CARTRIDGE_MEGA_4096_DESC),
-		UI_MENU_ACTION(CARTRIDGE_MEGA_2048, CARTRIDGE_MEGA_2048_DESC),
-		UI_MENU_ACTION(CARTRIDGE_THECART_32M, CARTRIDGE_THECART_32M_DESC),
-		UI_MENU_ACTION(CARTRIDGE_THECART_64M, CARTRIDGE_THECART_64M_DESC),
-		UI_MENU_ACTION(CARTRIDGE_XEGS_8F_64, CARTRIDGE_XEGS_8F_64_DESC),
-		UI_MENU_ACTION(CARTRIDGE_ATRAX_128, CARTRIDGE_ATRAX_128_DESC),
-		UI_MENU_ACTION(CARTRIDGE_ADAWLIAH_32, CARTRIDGE_ADAWLIAH_32_DESC),
-		UI_MENU_ACTION(CARTRIDGE_ADAWLIAH_64, CARTRIDGE_ADAWLIAH_64_DESC),
-		UI_MENU_END
-	};
-
-	int i;
+	UI_tMenuItem menu_array[CARTRIDGE_LAST_SUPPORTED+1] = { 0 };
+	int cart_entry;
+	int menu_entry = 0;
 	int option = 0;
 
 	UI_driver->fInit();
 
-	for (i = 1; i <= CARTRIDGE_LAST_SUPPORTED; i++)
-		if (CARTRIDGE_kb[i] == k) {
-			if (option == 0)
-				option = i;
-			menu_array[i - 1].flags = UI_ITEM_ACTION;
-		}
-		else
-			menu_array[i - 1].flags = UI_ITEM_HIDDEN;
-
-	if (option == 0)
+	for (cart_entry = 1; cart_entry <= CARTRIDGE_LAST_SUPPORTED;
+	     cart_entry++) {
+		if (CARTRIDGES[cart_entry].kb == k) {
+			menu_array[menu_entry].flags = UI_ITEM_ACTION;
+			menu_array[menu_entry].retval = cart_entry;
+			menu_array[menu_entry].item =
+				CARTRIDGES[cart_entry].description;
+			menu_entry++;
+	    	}
+	}
+		
+	if (menu_entry == 0)
 		return CARTRIDGE_NONE;
 
-	option = UI_driver->fSelect("Select Cartridge Type", 0, option, menu_array, NULL);
+	/* Terminate menu_array, but do it by hand */
+	menu_array[menu_entry].flags = UI_ITEM_END;
+
+	option = UI_driver->fSelect("Select Cartridge Type", 0, option,
+		menu_array, NULL);
 	if (option > 0)
 		return option;
 
@@ -1756,7 +1690,7 @@ static void ROMLocations(char const *title, UI_tMenuItem *menu_array)
 			else {
 				/* Use first non-empty ROM path as a starting filename for the dialog. */
 				int i;
-				for (i = 0; i < SYSROM_SIZE; ++i) {
+				for (i = 0; i < SYSROM_LOADABLE_SIZE; ++i) {
 					if (SYSROM_roms[i].filename[0] != '\0') {
 						strcpy(filename, SYSROM_roms[i].filename);
 						break;
@@ -1849,6 +1783,48 @@ static void ROMLocationsXEGame(void)
 	ROMLocations("XEGS Builtin Game ROM Locations", menu_array);
 }
 
+static SYSROM_t GetCurrentOS(void)
+{
+	SYSROM_t sysrom = { 0 };
+
+	int rom = SYSROM_os_versions[Atari800_machine_type];
+	if (rom == SYSROM_AUTO)
+		rom = SYSROM_AutoChooseOS(Atari800_machine_type, MEMORY_ram_size, Atari800_tv_mode);
+
+	if (rom != -1)
+		sysrom = SYSROM_roms[rom];
+
+	return sysrom;
+}
+
+static SYSROM_t GetCurrentBASIC(void)
+{
+	SYSROM_t sysrom = { 0 };
+
+	int rom = SYSROM_basic_version;
+	if (rom == SYSROM_AUTO)
+		rom = SYSROM_AutoChooseBASIC();
+
+	if (rom != -1)
+		sysrom = SYSROM_roms[rom];
+
+	return sysrom;
+}
+
+static SYSROM_t GetCurrentXEGame(void)
+{
+	SYSROM_t sysrom = { 0 };
+
+	int rom = SYSROM_xegame_version;
+	if (rom == SYSROM_AUTO)
+		rom = SYSROM_AutoChooseXEGame();
+
+	if (rom != -1)
+		sysrom = SYSROM_roms[rom];
+
+	return sysrom;
+}
+
 static void SystemROMSettings(void)
 {
 	static UI_tMenuItem menu_array[] = {
@@ -1862,6 +1838,8 @@ static void SystemROMSettings(void)
 	};
 
 	int option = 0;
+	int need_initialise = FALSE;
+	SYSROM_t old_sysrom, new_sysrom;
 
 	for (;;) {
 		int seltype;
@@ -1880,26 +1858,101 @@ static void SystemROMSettings(void)
 						break;
 					}
 				}
-				if (UI_driver->fGetDirectoryPath(rom_dir))
-					SYSROM_FindInDir(rom_dir, FALSE);
+				if (UI_driver->fGetDirectoryPath(rom_dir)) {
+					SYSROM_t old_basic, old_xegame;
+
+					old_sysrom = GetCurrentOS();
+					old_basic = GetCurrentBASIC();
+					old_xegame = GetCurrentXEGame();
+
+					if (SYSROM_FindInDir(rom_dir, FALSE)) {
+						new_sysrom = GetCurrentOS();
+
+						if (old_sysrom.data != new_sysrom.data) {
+							need_initialise = TRUE;
+							break;
+						}
+
+						if (Atari800_machine_type != Atari800_MACHINE_5200) {
+							new_sysrom = GetCurrentBASIC();
+
+							if (old_basic.data != new_sysrom.data) {
+								need_initialise = TRUE;
+								break;
+							}
+						}
+
+						if (Atari800_machine_type == Atari800_MACHINE_XLXE && Atari800_builtin_game) {
+							new_sysrom = GetCurrentXEGame();
+
+							if (old_xegame.data != new_sysrom.data) {
+								need_initialise = TRUE;
+								break;
+							}
+						}
+					}
+				}
 			}
 			break;
+
 		case 1:
-			ROMLocations800();
-			break;
 		case 2:
-			ROMLocationsXL();
-			break;
 		case 3:
-			ROMLocations5200();
+			old_sysrom = GetCurrentOS();
+
+			switch (option) {
+			case 1:
+				ROMLocations800();
+				break;
+			case 2:
+				ROMLocationsXL();
+				break;
+			case 3:
+				ROMLocations5200();
+				break;
+			}
+
+			new_sysrom = GetCurrentOS();
+
+			if (old_sysrom.data != new_sysrom.data)
+				need_initialise = TRUE;
 			break;
+
 		case 4:
-			ROMLocationsBASIC();
+			if (Atari800_machine_type != Atari800_MACHINE_5200) {
+				old_sysrom = GetCurrentBASIC();
+
+				ROMLocationsBASIC();
+
+				new_sysrom = GetCurrentBASIC();
+
+				if (old_sysrom.data != new_sysrom.data)
+					need_initialise = TRUE;
+			} else {
+				/* ignore BASIC changes on 5200 */
+				ROMLocationsBASIC();
+			}
 			break;
+
 		case 5:
-			ROMLocationsXEGame();
+			if (Atari800_machine_type == Atari800_MACHINE_XLXE && Atari800_builtin_game) {
+				old_sysrom = GetCurrentXEGame();
+
+				ROMLocationsXEGame();
+
+				new_sysrom = GetCurrentXEGame();
+
+				if (old_sysrom.data != new_sysrom.data)
+					need_initialise = TRUE;
+			} else {
+				/* ignore XEGame changes on non-XE */
+				ROMLocationsXEGame();
+			}
 			break;
+
 		default:
+			if (need_initialise)
+				Atari800_InitialiseMachine();
 			return;
 		}
 	}
@@ -4123,6 +4176,55 @@ static void HotKeyHelp(void)
 		"\n");
 }
 #endif
+
+int UI_Initialise(int *argc, char *argv[])
+{
+	int i;
+	int j;
+
+	for (i = j = 1; i < *argc; i++) {
+		int i_a = (i + 1 < *argc); /* is argument available? */
+		int a_m = FALSE; /* error, argument missing! */
+		int a_i = FALSE; /* error, argument invalid! */
+
+		if (strcmp(argv[i], "-atari_files") == 0) {
+			if (i_a) {
+				if (UI_n_atari_files_dir >= UI_MAX_DIRECTORIES)
+					Log_print("All ATARI_FILES_DIR slots used!");
+				else
+					Util_strlcpy(UI_atari_files_dir[UI_n_atari_files_dir++], argv[++i], FILENAME_MAX);
+			}
+			else a_m = TRUE;
+		}
+		else if (strcmp(argv[i], "-saved_files") == 0) {
+			if (i_a) {
+				if (UI_n_saved_files_dir >= UI_MAX_DIRECTORIES)
+					Log_print("All SAVED_FILES_DIR slots used!");
+				else
+					Util_strlcpy(UI_saved_files_dir[UI_n_saved_files_dir++], argv[++i], FILENAME_MAX);
+			}
+			else a_m = TRUE;
+		}
+		else {
+			if (strcmp(argv[i], "-help") == 0) {
+				Log_print("\t-atari_files <path>  Set default path for Atari executables");
+				Log_print("\t-saved_files <path>  Set default path for saved files");
+			}
+			argv[j++] = argv[i];
+		}
+
+		if (a_m) {
+			Log_print("Missing argument for '%s'", argv[i]);
+			return FALSE;
+		} else if (a_i) {
+			Log_print("Invalid argument for '%s'", argv[--i]);
+			return FALSE;
+		}
+	}
+	*argc = j;
+
+	return TRUE;
+}
 
 void UI_Run(void)
 {

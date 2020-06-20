@@ -1,8 +1,8 @@
 ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = DOC src
+SUBDIRS = DOC src tools
 
-doc_DATA = COPYING README.1ST
+doc_DATA = COPYING README.TXT
 
 EXTRA_DIST = $(doc_DATA) act data debian util

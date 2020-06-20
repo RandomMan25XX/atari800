@@ -1,6 +1,6 @@
 # generic defines used by all distributions.
 #
-%define ver			4.1.0
+%define ver			4.2.0
 # When adding a target, add an $options_<target_name> variable to the %build
 # section, and add %{_bindir}/%{name}-<target_name> to the files list in the
 # %files section.
@@ -235,7 +235,7 @@ install -m 644 %{name}.1 %{buildroot}/%{_mandir}/man1/
 %{_bindir}/%{name}-%{maintarget}
 %{_mandir}/man1/%{name}.1.*
 %doc COPYING
-%doc README.1ST
+%doc README.TXT
 %doc DOC/BUGS
 %doc DOC/ChangeLog
 %doc DOC/CREDITS

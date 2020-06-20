@@ -181,7 +181,7 @@ static short int coltable[256][3], coltable_backup[256][3];
 /* -------------------------------------------------------------------------- */
 
 static ULONG old_frclock;
-#define SCREEN_BUFFERS	3
+#define SCREEN_BUFFERS	2
 static UBYTE* new_videobases[SCREEN_BUFFERS];
 #define new_videobase new_videobases[0]	/* work address (pointer to logical buffer) */
 
@@ -1444,8 +1444,6 @@ double PLATFORM_Time(void)
 int main(int argc, char **argv)
 {
 #ifdef SOUND
-	/* disabled by default */
-	POKEYSND_enable_new_pokey = FALSE;
 	/* set default desired sound */
 	Sound_desired.freq = 24585;
 	Sound_desired.sample_size = 1;

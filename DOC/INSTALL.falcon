@@ -38,7 +38,7 @@ assembler core included! No more dilemmas about speed vs. compatibility.
 ===========================================================================
 All m68k versions are built with following switches:
 
---host=m68k-atari-mint --enable-veryslow --disable-monitorbreak --disable-monitorhints --disable-crashmenu --disable-monitorasm --disable-eventrecording --disable-monitorutf8 --disable-monitoransi --disable-pbi_bb --disable-pbi_mio --with-readline=no
+--host=m68k-atari-mint --enable-veryslow --disable-monitorbreak --disable-monitorhints --disable-crashmenu --disable-monitorasm --disable-eventrecording --disable-monitorutf8 --disable-monitoransi --disable-pbi_bb --disable-pbi_mio --disable-riodevice --with-readline=no
 
 Then specifically:
 
@@ -92,5 +92,5 @@ Several special command line parameters were introduced in this Falcon port. Use
 
 For bugreports of Falcon port please write to me (Miro Kropacek)
 
-e-mail    miro.kropacekk@gmail.com
+e-mail    miro.kropacek@gmail.com
 WWW       http://atari800.github.io/
