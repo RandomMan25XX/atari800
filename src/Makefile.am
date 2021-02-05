@@ -12,11 +12,11 @@ noinst_PROGRAMS =
 
 man1dir = $(mandir)/man1
 
-AM_CPPFLAGS = -I.
-
 SUFFIXES = .c .cpp .s .o .h .asm
 
 doc_DATA = 
+
+atari800_CPPFLAGS =
 
 if CONFIGURE_TARGET_LIBATARI800
 lib_LIBRARIES = libatari800.a
@@ -87,7 +87,8 @@ atari800_LDADD =
 if A8_USE_SDL
 atari800_SOURCES += sdl/init.c sdl/init.h
 if CONFIGURE_HOST_WIN
-atari800_SOURCES += win32/SDL_win32_main.c
+atari800_SOURCES += sdl/SDL_win32_main.c
+atari800_CPPFLAGS += -Dmain=SDL_main
 endif
 endif
 
@@ -112,6 +113,9 @@ atari800_SOURCES += sound.c dos/sound_dos.c dos/dos_sb.c dos/dos_sb.h
 endif
 if WITH_SOUND_OSS
 atari800_SOURCES += sound.c sound_oss.c
+endif
+if WITH_SOUND_WIN
+atari800_SOURCES += win32/sound.c
 endif
 if WITH_SOUND_LIBATARI800
 atari800_SOURCES += sound.c libatari800/sound.c libatari800/sound.h
@@ -149,9 +153,6 @@ libwin32_a_SOURCES = \
 	win32/main.c win32/main.h win32/main_menu.h \
 	win32/keyboard.c win32/keyboard.h \
 	win32/joystick.c win32/joystick.h
-if WITH_SOUND_WIN
-libwin32_a_SOURCES += win32/sound.c
-endif
 atari800_LDADD += libwin32.a win32/atari.ro
 # A special rule for win32 to not compile with -ansi -pedantic
 libwin32_a_CFLAGS = $(CFLAGS_NOANSI)
@@ -271,7 +272,7 @@ endif
 
 # A special rule for SDL_win32_main.c to suppress warnings since this file is
 # from SDL and should not have to be modified
-win32/SDL_win32_main.o: win32/SDL_win32_main.c
+sdl/SDL_win32_main.o: sdl/SDL_win32_main.c
 	$(CC) -c -o $@ $(AM_CPPFLAGS) $(CFLAGS) $(DEFAULT_INCLUDES) $(CPPFLAGS) $(DEFS) -Wno-missing-declarations -Wno-missing-prototypes $<
 
 ide.o: ide.c ide.h ide_internal.h
@@ -315,7 +316,7 @@ $(TARGET_BASE_NAME).jar: $(TARGET_BASE_NAME).class $(TARGET_BASE_NAME)$(RUNTIME)
 
 # Allow parallel execution in sub-make with '+'
 android:
-	+ ndk-build -C android
+	+ $(NDK_BUILD) -C android
 	ant -f android/build.xml debug
 .PHONY: android
 

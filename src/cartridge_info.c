@@ -25,7 +25,7 @@
 #include "memory.h"
 #include "cartridge.h"
 
-cart_t CARTRIDGES[CARTRIDGE_TYPE_COUNT] = {
+cart_t const CARTRIDGES[CARTRIDGE_TYPE_COUNT] = {
 	{ "NONE",                                      0 },
 	{ "Standard 8 KB cartridge",                   8 },
 	{ "Standard 16 KB cartridge",                 16 },
@@ -68,7 +68,7 @@ cart_t CARTRIDGES[CARTRIDGE_TYPE_COUNT] = {
 	{ "Phoenix 8 KB cartridge",                    8 },
 	{ "Blizzard 16 KB cartridge",                 16 },
 	{ "Atarimax 128 KB Flash cartridge",         128 },
-	{ "Atarimax 1 MB Flash cartridge",          1024 },
+	{ "Atarimax 1 MB Flash cartridge (old)",    1024 },
 	{ "SpartaDOS X 128 KB cartridge",            128 },
 	{ "OSS 8 KB cartridge",                        8 },
 	{ "OSS two chip 16 KB cartridge (043M)",      16 },
@@ -97,10 +97,11 @@ cart_t CARTRIDGES[CARTRIDGE_TYPE_COUNT] = {
 	{ "Atrax 128 KB cartridge",                  128 },
 	{ "aDawliah 32 KB cartridge",                 32 },
 	{ "aDawliah 64 KB cartridge",                 64 },
-	{ "Switchable 5200 64 KB cartridge",          64 },
-	{ "Switchable 5200 128 KB cartridge",        128 },
-	{ "Switchable 5200 256 KB cartridge",        256 },
-	{ "Switchable 5200 512 KB cartridge",        512 }
+	{ "Super Cart 64 KB 5200 cartridge",          64 },
+	{ "Super Cart 128 KB 5200 cartridge",        128 },
+	{ "Super Cart 256 KB 5200 cartridge",        256 },
+	{ "Super Cart 512 KB 5200 cartridge",        512 },
+	{ "Atarimax 1 MB Flash cartridge (new)",    1024 }
 };
 
 int CARTRIDGE_Checksum(const UBYTE *image, int nbytes)

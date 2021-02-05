@@ -172,6 +172,14 @@ if [[ "$a8_target" = "android" ]]; then
 	with_readline=no
 	WANT_EVENT_RECORDING=no
 	AC_DEFINE(HAVE_GETTIMEOFDAY,1)
+
+	# Take care of the ndk-build script name difference on Windows version of Android NDK.
+	if [[ "$build_os" = "cygwin" -o "$build_os" = "mingw32" ]]; then
+		NDK_BUILD=ndk-build.cmd
+	else
+		NDK_BUILD=ndk-build
+	fi
+	AC_SUBST(NDK_BUILD)
 fi
 if [[ "$a8_host" = "falcon" ]]; then
 	CFLAGS="-m68020-60 -O2 -fomit-frame-pointer -Wall"
@@ -214,11 +222,12 @@ AC_DEFUN([TRY_USE_SDL],
             LIBS="$LIBS $SDL_LIBS"
             CPPFLAGS="$CPPFLAGS $SDL_CFLAGS"
             if [[ "$a8_host" = "win" ]]; then
-dnl Don't redefine main -- SDL.h will do it for us in atari_sdl.c Otherwise
-dnl the autoconf tests don't work.
+dnl Defer redefinition of main - do it later, in src/Makefile.am. Otherwise
+dnl the autoconf tests would not work.
                 CPPFLAGS=${CPPFLAGS/-Dmain=SDL_main/}
-dnl Avoid making stdout.txt on Windows sdl target by compiling our own SDL_main
-dnl Get SDL_win32_main.c from the SDL source and copy it to the src directory.
+dnl Avoid making stdout.txt on Windows sdl target by discarding libSDLmain and
+dnl compiling our own src/sdl/SDL_win32_main.c (copied from libSDL dources),
+dnl with the NO_STDIO_REDIRECT macro defined.
                 LIBS=${LIBS/-lSDLmain/}
                 CPPFLAGS="$CPPFLAGS -DNO_STDIO_REDIRECT"
 dnl Don't make this a windowed app, make it a console app.
