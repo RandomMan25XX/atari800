@@ -102,9 +102,9 @@
 #endif /* HAVE_OPENGL */
 #endif /* GUI_SDL */
 
-#ifdef _3DS
+#ifdef __3DS__
 #include "3ds/video.h"
-#endif /* _3DS */
+#endif /* __3DS__ */
 
 #ifdef DIRECTX
 /* Display Settings */
@@ -166,10 +166,10 @@ extern void do_hz_test(void);
 #endif /* HZ_TEST */
 #endif /* DREAMCAST */
 
-#ifdef _3DS
+#ifdef __3DS__
 #define UI_DPAD_AS_KEYBOARD
 extern int dpad_as_keyboard;
-#endif /* _3DS */
+#endif /* __3DS__ */
 
 #ifdef RPI
 extern int op_filtering;
@@ -2354,9 +2354,9 @@ static void VideoModeSettings(void)
 #endif /* HAVE_OPENGL */
 		UI_MENU_CHECK(9, "Vertical synchronization:"),
 #endif /* GUI_SDL */
-#ifdef _3DS
+#ifdef __3DS__
 		UI_MENU_CHECK(9, "Vertical synchronization:"),
-#endif /* _3DS */
+#endif /* __3DS__ */
 		UI_MENU_SUBMENU_SUFFIX(10, "Image aspect ratio:", NULL),
 		UI_MENU_SUBMENU_SUFFIX(11, "Stretch image:", NULL),
 		UI_MENU_SUBMENU_SUFFIX(12, "Fit screen method:", NULL),
@@ -2401,10 +2401,10 @@ static void VideoModeSettings(void)
 		snprintf(scanlines_string, sizeof(scanlines_string), "%d", SDL_VIDEO_scanlines_percentage);
 		SetItemChecked(menu_array, 18, SDL_VIDEO_interpolate_scanlines);
 #endif /* GUI_SDL */
-#ifdef _3DS
+#ifdef __3DS__
 		FindMenuItem(menu_array, 9)->flags = UI_ITEM_CHECK;
 		SetItemChecked(menu_array, 9, N3DS_IsVsyncEnabled());
-#endif /* _3DS */
+#endif /* __3DS__ */
 		SetItemChecked(menu_array, 4, !VIDEOMODE_windowed);
 		VIDEOMODE_CopyResolutionName(VIDEOMODE_GetFullscreenResolution(), res_string, 10);
 #if SUPPORTS_ROTATE_VIDEOMODE
@@ -2533,11 +2533,11 @@ static void VideoModeSettings(void)
 				UI_driver->fMessage("Not available in this video mode.", 1);
 			break;
 #endif /* GUI_SDL */
-#ifdef _3DS
+#ifdef __3DS__
 		case 9:
 			N3DS_ToggleVsync();
 			break;
-#endif /* _3DS */
+#endif /* __3DS__ */
 		case 10:
 			option2 = UI_driver->fSelect(NULL, UI_SELECT_POPUP, VIDEOMODE_keep_aspect, aspect_menu_array, NULL);
 			if (option2 >= 0)
@@ -3718,7 +3718,7 @@ static void ControllerConfiguration(void)
 	};
 #endif
 
-#if !defined(_WIN32_WCE) && !defined(DREAMCAST) && !defined(_3DS)
+#if !defined(_WIN32_WCE) && !defined(DREAMCAST) && !defined(__3DS__)
 	static const UI_tMenuItem mouse_mode_menu_array[] = {
 		UI_MENU_ACTION(0, "None"),
 		UI_MENU_ACTION(1, "Paddles"),
@@ -3736,7 +3736,7 @@ static void ControllerConfiguration(void)
 	static char mouse_speed_status[2] = { '1', '\0' };
 #endif
 
-#if defined(_3DS)
+#if defined(__3DS__)
 	static const UI_tMenuItem dpad_map_menu_array[] = {
 		UI_MENU_ACTION(0, "Joystick"),
 		UI_MENU_ACTION(1, "Keyboard"),
@@ -3753,7 +3753,7 @@ static void ControllerConfiguration(void)
 		UI_MENU_CHECK(9, "Emulate Paddles:"),
 		UI_MENU_ACTION(10, "Joystick/D-Pad configuration"),
 		UI_MENU_ACTION(11, "Button configuration"),
-#elif defined(_3DS)
+#elif defined(__3DS__)
 		UI_MENU_SUBMENU_SUFFIX(9, "D-Pad maps to:", NULL),
 #else
 		UI_MENU_SUBMENU_SUFFIX(2, "Mouse device: ", NULL),
@@ -3795,7 +3795,7 @@ static void ControllerConfiguration(void)
 		SetItemChecked(menu_array, 5, virtual_joystick);
 #elif defined(DREAMCAST)
 		SetItemChecked(menu_array, 9, emulate_paddles);
-#elif defined(_3DS)
+#elif defined(__3DS__)
 		menu_array[2].suffix = dpad_map_menu_array[dpad_as_keyboard].item;
 #else
 		menu_array[2].suffix = mouse_mode_menu_array[INPUT_mouse_mode].item;
@@ -3844,7 +3844,7 @@ static void ControllerConfiguration(void)
 		case 11:
 			ButtonConfiguration();
 			break;
-#elif defined(_3DS)
+#elif defined(__3DS__)
 		case 9:
 			option2 = UI_driver->fSelect(NULL, UI_SELECT_POPUP, dpad_as_keyboard, dpad_map_menu_array, NULL);
 			if (option2 >= 0)
@@ -4330,7 +4330,7 @@ void UI_Run(void)
 		UI_MENU_ACTION(UI_MENU_MONITOR, "About AtariDC"),
 #elif defined(DIRECTX)
 		UI_MENU_ACTION_ACCEL(UI_MENU_MONITOR, monitor_label, "F8"),
-#elif !defined(_3DS)
+#elif !defined(__3DS__)
 		UI_MENU_ACTION_ACCEL(UI_MENU_MONITOR, "Enter Monitor", "F8"),
 #endif
 		UI_MENU_ACTION_ACCEL(UI_MENU_ABOUT, "About the Emulator", "Alt+A"),
