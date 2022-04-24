@@ -202,6 +202,52 @@ AC_PROG_INSTALL
 AC_PROG_RANLIB
 AC_CHECK_TOOLS(WINDRES, [windres], :)
 
+
+dnl The A8_ADD_INCLUDE_PATH macro searches for include files in subdirectories of
+dnl a list of paths plus standard include paths. E.g. /usr/include/PACKAGE/package.h
+dnl is not found automatically because only /usr/include is searched, not
+dnl /usr/include/PACKAGE. This function takes standard include paths plus any
+dnl additional include paths in argument $3 and for each path there, looks in
+dnl any existing subdirs specified in argument $4. If found, the subdir is added
+dnl to the $CPPFLAGS variable. If not found in any path combination, the code in
+dnl $5 is executed.
+dnl         $1    = the name of the feature for informational messages
+dnl         $2    = header file to use as test for presense
+dnl         $3    = the list of possible include directory paths to use as prefixes
+dnl                 to the combined path
+dnl         $4    = the list of possible include subdirectories
+dnl         $5    = code to execute if include not found
+AC_DEFUN([A8_ADD_INCLUDE_PATH], [
+    AC_CHECK_HEADER([$2],[],[
+        _a8_saved_cppflags=$CPPFLAGS
+        _a8_found=no
+        for _a8_dir in ${prefix}/include $3; do
+            for _a8_subdir in $4; do
+                _a8_fulldir="$_a8_dir/$_a8_subdir"
+                test ! -d "$_a8_fulldir" && continue
+                AC_MSG_CHECKING([for $1 headers in])
+                AC_MSG_RESULT([$_a8_fulldir])
+                AS_UNSET([AS_TR_SH([ac_cv_header_$2])])
+                CPPFLAGS="$_a8_saved_cppflags -I$_a8_fulldir"
+                AC_CHECK_HEADER([$2],[_a8_found="yes"; break],[])
+            done
+            if [[ "$_a8_found" = "yes" ]]; then
+                break
+            fi
+        done
+        if [[ "$_a8_found" != "yes" ]]; then
+            CPPFLAGS=$_a8_saved_cppflags
+            $5
+        fi
+        AS_UNSET(_a8_found)
+        AS_UNSET(_a8_dir)
+        AS_UNSET(_a8_subdir)
+        AS_UNSET(_a8_fulldir)
+        AS_UNSET(_a8_saved_cppflags)
+    ])
+])
+
+
 AC_DEFUN([AM_PROG_AS], []) dnl dummy to make automake happy, since vasm is used instead
 CCAS=vasm
 CCASFLAGS="-quiet -devpac -opt-allbra -Faout"
@@ -314,10 +360,18 @@ elif [[ "$a8_target" = "libatari800" ]]; then
     AC_CHECK_FUNCS(setjmp)
 else
 	AC_CHECK_LIB(z,gzopen)
-	AC_CHECK_LIB(png,png_get_libpng_ver)
+
+    dnl Need SUPPORTS_LIBPNG shell variable for PNG video codec test below
+	AC_CHECK_LIB(png,png_get_libpng_ver,[LIBS="-lpng $LIBS"; SUPPORTS_LIBPNG=yes],[SUPPORTS_LIBPNG=no])
+    if [[ "$SUPPORTS_LIBPNG" = "yes" ]]; then
+        AC_DEFINE(HAVE_LIBPNG,1,[Supports PNG image compression library.])
+    fi
+
 	AC_CHECK_LIB(m,cos,[LIBS="-lm $LIBS"])
 	AC_CHECK_LIB(ossaudio,_oss_ioctl,[LIBS="-lossaudio $LIBS"])
 fi
+AM_CONDITIONAL([WITH_LIBPNG], test "$SUPPORTS_LIBPNG" = "yes")
+
 
 dnl Set OBJS and libraries depending on host and target...
 
@@ -395,6 +449,7 @@ dnl BeOS has a real issue with redundant-decls
         ;;
     libatari800)
         AC_DEFINE(LIBATARI800,1,[Target: Atari800 as a library.])
+        AC_DEFINE(SUPPORTS_PLATFORM_CONFIGURE,1,[Additional config file options.])
         ;;
     x11*)
         AC_DEFINE(X11,1,[Target: Standard X11.])
@@ -709,7 +764,7 @@ AC_DEFUN([A8_OPTION],[
     fi
 ])
 
-if [[ "$a8_target" == "libatari800" ]]; then
+if [[ "$a8_target" = "libatari800" ]]; then
     WANT_NEW_CYCLE_EXACT=yes
     WANT_VERY_SLOW=no
     WANT_CRASH_MENU=no
@@ -879,6 +934,14 @@ if [[ "$a8_target" = libatari800 ]]; then
     if [[ "$with_sound" = check -o "$with_sound" = yes ]]; then
         with_sound=libatari800
         WANT_SOUND_THIN_API=yes
+        WANT_SOUND_CALLBACK=no
+        WANT_CONSOLE_SOUND=yes
+        WANT_SERIO_SOUND=yes
+        WANT_VOL_ONLY_SOUND=no
+
+        WANT_SYNCHRONIZED_SOUND=no
+        dnl workaround for WANT_SYNCHRONIZED_SOUND being ignored by A8_OPTION macro
+        enable_synchronized_sound=no
     else
         AC_MSG_ERROR([--with-audio option not needed to build libatari800!])
     fi
@@ -1040,12 +1103,41 @@ if [[ "$with_sound" != no ]]; then
               VOICEBOX,[Define to emulate the Alien Group Voice Box.]
              )
 
-    if [[ "$with_sound" == "libatari800" ]]; then
-        WANT_SOUND_CALLBACK=no
-        WANT_CONSOLE_SOUND=yes
-        WANT_SERIO_SOUND=yes
-        WANT_SYNCHRONIZED_SOUND=no
-        WANT_VOL_ONLY_SOUND="no"
+    supported_audio_codecs="pcm adpcm mulaw"
+    AC_ARG_WITH(mp3,
+        [AC_HELP_STRING(--with-mp3@<:@=no|yes|lame@:>@,[Select mp3 audio @<:@default=check@:>@])],
+        [
+            case "$withval" in
+                no | yes | check | lame)
+                    ;;
+                *)
+                    AC_MSG_ERROR([unrecognized value for --with-mp3: "$withval"])
+                    ;;
+            esac
+        ],
+        [with_mp3=check])
+    if [[ "$with_mp3" != "no" ]]; then
+        if [[ "$with_mp3" = check -o "$with_mp3" = yes -o "$with_mp3" = lame ]]; then
+            AC_CHECK_LIB(mp3lame, lame_init, [
+                A8_ADD_INCLUDE_PATH([lame],[lame.h],[/usr/include /usr/local/include],[lame],[
+                    if [[ "$with_mp3" = yes -o "$with_mp3" = "lame" ]]; then
+                        AC_MSG_ERROR([lame.h not found, modify CPPFLAGS or use --with-mp3=check])
+                    fi
+                    with_mp3=no
+                ])
+                if [[ $with_mp3 != no ]]; then
+                    LIBS="-lmp3lame $LIBS"
+                    AC_DEFINE(AUDIO_CODEC_MP3,1,[Supports mp3 audio])
+                    supported_audio_codecs="$supported_audio_codecs mp3"
+                    with_mp3="libmp3lame"
+                fi
+            ], [
+                if [[ "$with_mp3" = yes -o "$with_mp3" = "lame" ]]; then
+                    AC_MSG_ERROR([unable to find libmp3lame, modify LDFLAGS or use --with-mp3=check])
+                fi
+                with_mp3="no"
+            ])
+        fi
     fi
 else
     WANT_NONLINEAR_MIXING="no"
@@ -1057,11 +1149,65 @@ else
     WANT_SERIO_SOUND="no"
     WANT_CLIP_SOUND="no"
     WANT_PBI_XLD_SOUND="no"
+    WANT_AUDIO_CODEC_MP3="no"
 fi
 AM_CONDITIONAL([WANT_PBI_XLD], test "$WANT_PBI_XLD" = "yes")
 AM_CONDITIONAL([WANT_VOICEBOX], test "$WANT_VOICEBOX" = "yes")
 AM_CONDITIONAL([WANT_PBI_XLD_OR_VOICEBOX], test "$WANT_PBI_XLD" = "yes" -o "$WANT_VOICEBOX" = "yes")
 AM_CONDITIONAL([WANT_PBI_MIO_OR_BB], test "$WANT_PBI_MIO" = "yes" -o "$WANT_PBI_BB" = "yes")
+AM_CONDITIONAL([WITH_AUDIO_CODEC_MP3], test "$with_mp3" != "no")
+
+if [[ "$with_video" != no -a "$WANT_CURSES_BASIC" != yes ]]; then
+    have_bitmapped_screen=yes
+    A8_OPTION(videorecording,"yes",
+            [Support video recording to AVI files (default=ON)],
+            VIDEO_RECORDING,[Define to enable support for AVI video/audio recording.]
+            )
+    supported_image_formats="pcx"
+    if [[ "$SUPPORTS_LIBPNG" = "yes" ]]; then
+        supported_image_formats="$supported_image_formats png"
+    fi
+else
+    have_bitmapped_screen="no"
+    WANT_VIDEO_RECORDING="no"
+fi
+
+if [[ "$with_sound" != no -o "$WANT_VIDEO_RECORDING" = yes ]]; then
+    AC_DEFINE(MULTIMEDIA, 1, [Define to provide multimedia recording capability.])
+fi
+AM_CONDITIONAL([WITH_MULTIMEDIA], test "$with_sound" != no -o "$WANT_VIDEO_RECORDING" = "yes")
+
+dnl file_export.c is needed when sound is enabled (for WAV recording) or when AVI recording
+dnl is enabled, or for screenshots when screen.c is compiled into the code.
+AM_CONDITIONAL([WITH_FILE_EXPORT], test "$with_sound" != no -o "$have_bitmapped_screen" = "yes")
+
+dnl Set video recording configuration options
+
+if [[ "$WANT_VIDEO_RECORDING" = "yes" ]]; then
+    supported_video_codecs="rle"
+    if [[ "$SUPPORTS_LIBPNG" = "yes" ]]; then
+        A8_OPTION(pngcodec,"yes",
+                [Support PNG video codec (default=ON)],
+                VIDEO_CODEC_PNG,[Define to enable support for PNG video codec.]
+                )
+        if [[ "$WANT_VIDEO_CODEC_PNG" = "yes" ]]; then
+            supported_video_codecs="$supported_video_codecs png"
+        fi
+    else
+        WANT_VIDEO_CODEC_PNG=no
+    fi
+    A8_OPTION(zmbvcodec,"yes",
+            [Support ZMBV video codec (default=ON)],
+            VIDEO_CODEC_ZMBV,[Define to enable support for ZMBV video codec.]
+            )
+    if [[ "$WANT_VIDEO_CODEC_ZMBV" = "yes" ]]; then
+        supported_video_codecs="$supported_video_codecs zmbv"
+    fi
+fi
+
+AM_CONDITIONAL([WITH_VIDEO_RECORDING], test "$WANT_VIDEO_RECORDING" = "yes")
+AM_CONDITIONAL([WITH_VIDEO_CODEC_PNG], test "$WANT_VIDEO_RECORDING" = "yes" -a "$WANT_VIDEO_CODEC_PNG" = "yes")
+AM_CONDITIONAL([WITH_VIDEO_CODEC_ZMBV], test "$WANT_VIDEO_RECORDING" = "yes" -a "$WANT_VIDEO_CODEC_ZMBV" = "yes")
 
 A8_OPTION(ide,$WANT_IDE,
           [Provide IDE emulation (default=ON)],
@@ -1077,7 +1223,7 @@ A8_OPTION(pokeyrec,$WANT_POKEYREC,
           [Provide Pokey registers recording (default=ON)],
           POKEYREC,[Define to add Pokey registers recording.]
          )
-if [[ "$WANT_POKEYREC" == "yes" ]]; then
+if [[ "$WANT_POKEYREC" = "yes" ]]; then
     AC_SYS_LARGEFILE
 fi
 AM_CONDITIONAL([WANT_POKEYREC], test "$WANT_POKEYREC" = "yes")
@@ -1274,6 +1420,7 @@ if [[ "$a8_target" = default ]]; then
 fi
 if [[ "$a8_target" != "default" -o "$with_video" != no ]]; then
     if [[ "$WANT_CURSES_BASIC" != "yes" ]]; then
+        echo "Supported screenshot formats..........: $supported_image_formats"
         echo "Using cycle exact?....................: $WANT_NEW_CYCLE_EXACT"
         echo "Using the very slow computer support?.: $WANT_VERY_SLOW"
     fi
@@ -1312,9 +1459,18 @@ if [[ "$with_sound" != no ]]; then
     fi
     echo "    Using 1400XL/1450XLD emulation?...: $WANT_PBI_XLD"
     echo "    Using sound clipping?.............: $WANT_CLIP_SOUND"
+    echo "    Supported audio codecs............: $supported_audio_codecs"
+    if [[ "$with_mp3" != "no" ]]; then
+        echo "        Library for mp3 audio.........: $with_mp3"
+    fi
 else
     echo "    (Sound sub-options disabled)"
 fi
+echo "Using video recording?................: $WANT_VIDEO_RECORDING"
+if [[ "$WANT_VIDEO_RECORDING" = "yes" ]]; then
+    echo "    Supported video codecs............: $supported_video_codecs"
+fi
+
 if [[ "$a8_host" = "falcon" ]]; then
     echo "Using M68K assembler CPU core?........: $WANT_FALCON_CPUASM"
 fi

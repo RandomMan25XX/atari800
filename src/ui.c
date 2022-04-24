@@ -80,9 +80,11 @@
 #endif /* BIT3 */
 #ifdef SOUND
 #include "pokeysnd.h"
-#include "sndsave.h"
 #include "sound.h"
 #endif /* SOUND */
+#if defined(SOUND) || defined(VIDEO_RECORDING)
+#include "file_export.h"
+#endif /* defined(SOUND) || defined(VIDEO_RECORDING) */
 #ifdef DIRECTX
 #include "win32\main.h"
 #include "win32\joystick.h"
@@ -1281,27 +1283,54 @@ static void CartManagement(void)
 #if defined(SOUND) && !defined(DREAMCAST)
 static void SoundRecording(void)
 {
-	if (!SndSave_IsSoundFileOpen()) {
-		int no = 0;
-		do {
-			char buffer[32];
-			snprintf(buffer, sizeof(buffer), "atari%03d.wav", no);
-			if (!Util_fileexists(buffer)) {
-				/* file does not exist - we can create it */
-				FilenameMessage(SndSave_OpenSoundFile(buffer)
-					? "Recording sound to file \"%s\""
-					: "Can't write to file \"%s\"", buffer);
-				return;
+	if (!Sound_enabled) {
+		UI_driver->fMessage("Can't record. Sound not enabled.", 1);
+		return;
+	}
+	if (!File_Export_IsRecording()) {
+		char buffer[FILENAME_MAX];
+		if (File_Export_GetNextSoundFile(buffer, sizeof(buffer))) {
+			/* file does not exist - we can create it */
+			if (File_Export_StartRecording(buffer)) {
+				FilenameMessage("Recording sound to file \"%s\"", buffer);
 			}
-		} while (++no < 1000);
-		UI_driver->fMessage("All atariXXX.wav files exist!", 1);
+			else {
+				UI_driver->fMessage(FILE_EXPORT_error_message, 1);
+			}
+			return;
+		}
+		UI_driver->fMessage("All sound files exist!", 1);
 	}
 	else {
-		SndSave_CloseSoundFile();
+		File_Export_StopRecording();
 		UI_driver->fMessage("Recording stopped", 1);
 	}
 }
 #endif /* defined(SOUND) && !defined(DREAMCAST) */
+
+#ifdef VIDEO_RECORDING
+static void VideoRecording(void)
+{
+	if (!File_Export_IsRecording()) {
+		char buffer[FILENAME_MAX];
+		if (File_Export_GetNextVideoFile(buffer, sizeof(buffer))) {
+			/* file does not exist - we can create it */
+			if (File_Export_StartRecording(buffer)) {
+				FilenameMessage("Recording video to file \"%s\"", buffer);
+			}
+			else {
+				UI_driver->fMessage(FILE_EXPORT_error_message, 1);
+			}
+			return;
+		}
+		UI_driver->fMessage("All video files exist!", 1);
+	}
+	else {
+		File_Export_StopRecording();
+		UI_driver->fMessage("Recording stopped", 1);
+	}
+}
+#endif /* VIDEO_RECORDING */
 
 static int AutostartFile(void)
 {
@@ -4267,6 +4296,9 @@ void UI_Run(void)
 		UI_MENU_ACTION_ACCEL(UI_MENU_SOUND_RECORDING, "Sound Recording Start/Stop", "Alt+W"),
 #endif
 #endif
+#ifdef VIDEO_RECORDING
+		UI_MENU_ACTION_ACCEL(UI_MENU_VIDEO_RECORDING, "Video Recording Start/Stop", "Alt+V"),
+#endif
 #ifndef CURSES_BASIC
 		UI_MENU_SUBMENU(UI_MENU_DISPLAY, "Display Settings"),
 #endif
@@ -4389,6 +4421,11 @@ void UI_Run(void)
 			SoundRecording();
 			break;
 #endif
+#endif
+#ifdef VIDEO_RECORDING
+		case UI_MENU_VIDEO_RECORDING:
+			VideoRecording();
+			break;
 #endif
 		case UI_MENU_SAVESTATE:
 			SaveState();
