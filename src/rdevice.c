@@ -73,6 +73,7 @@
  */
 
 #include "config.h"
+#include "platform.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -746,6 +747,8 @@ static void open_connection(char * address, int port)
 #endif /* HAVE_WINDOWS_H */
   if((address != NULL) && (strlen(address) > 0))
   {
+    PLATFORM_InitNetwork();
+
     close(rdev_fd);
     close(sock);
     do_once = 1;
