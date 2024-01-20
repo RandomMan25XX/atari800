@@ -1692,32 +1692,80 @@ static void TapeManagement(void)
 
 }
 
-static void AdvancedHOptions(void)
+static void HDeviceStatus(void)
 {
-	static char open_info[] = "0 currently open files";
+	static char open_info[] = " 0 currently open files";
 	static UI_tMenuItem menu_array[] = {
-		UI_MENU_ACTION(0, "Atari executables path"),
-		UI_MENU_ACTION_TIP(1, open_info, NULL),
+		UI_MENU_ACTION(0, "Devices enabled:"),
+		UI_MENU_ACTION(1, "SIO letter:"),
+		UI_MENU_FILESEL_PREFIX_TIP(2, "Device 1 path: ", Devices_atari_h_dir[0], "Also device 6 with ASCII conversion"),
+		UI_MENU_FILESEL_PREFIX_TIP(3, "Device 2 path: ", Devices_atari_h_dir[1], "Also device 7 with ASCII conversion"),
+		UI_MENU_FILESEL_PREFIX_TIP(4, "Device 3 path: ", Devices_atari_h_dir[2], "Also device 8 with ASCII conversion"),
+		UI_MENU_FILESEL_PREFIX_TIP(5, "Device 4 path: ", Devices_atari_h_dir[3], "Also device 9 with ASCII conversion"),
+		UI_MENU_LABEL("Atari executable path:"),
+		UI_MENU_ACTION_PREFIX(6, " ", Devices_h_exe_path),
+		UI_MENU_LABEL("File status:"),
+		UI_MENU_ACTION_TIP(7, open_info, NULL),
 		UI_MENU_LABEL("Current directories:"),
-		UI_MENU_ACTION_PREFIX_TIP(2, "H1:", Devices_h_current_dir[0], NULL),
-		UI_MENU_ACTION_PREFIX_TIP(3, "H2:", Devices_h_current_dir[1], NULL),
-		UI_MENU_ACTION_PREFIX_TIP(4, "H3:", Devices_h_current_dir[2], NULL),
-		UI_MENU_ACTION_PREFIX_TIP(5, "H4:", Devices_h_current_dir[3], NULL),
+		UI_MENU_ACTION_PREFIX_TIP(8, " Dev 1:", Devices_h_current_dir[0], NULL),
+		UI_MENU_ACTION_PREFIX_TIP(9, " Dev 2:", Devices_h_current_dir[1], NULL),
+		UI_MENU_ACTION_PREFIX_TIP(10, " Dev 3:", Devices_h_current_dir[2], NULL),
+		UI_MENU_ACTION_PREFIX_TIP(11, " Dev 4:", Devices_h_current_dir[3], NULL),
 		UI_MENU_END
 	};
 	int option = 0;
+	char hdev_option[4];
 	for (;;) {
 		int i;
 		int seltype;
 		i = Devices_H_CountOpen();
-		open_info[0] = (char) ('0' + i);
-		open_info[21] = (i != 1) ? 's' : '\0';
-		menu_array[1].suffix = (i > 0) ? ((i == 1) ? "Backspace: close" : "Backspace: close all") : NULL;
+		open_info[1] = (char) ('0' + i);
+		open_info[22] = (i != 1) ? 's' : '\0';
+		FindMenuItem(menu_array, 7)->suffix = (i > 0) ? ((i == 1) ? "Backspace: close" : "Backspace: close all") : NULL;
 		for (i = 0; i < 4; i++)
-			menu_array[3 + i].suffix = Devices_h_current_dir[i][0] != '\0' ? "Backspace: reset to root" : NULL;
-		option = UI_driver->fSelect("Advanced H: options", 0, option, menu_array, &seltype);
+			menu_array[11 + i].suffix = Devices_h_current_dir[i][0] != '\0' ? "Backspace: reset to root" : NULL;
+		FindMenuItem(menu_array, 0)->suffix = Devices_enable_h_patch ? (Devices_h_read_only ? "Read-only" : "Read/write") : "No ";
+		strcpy(hdev_option + 1, ":");
+		hdev_option[0] = Devices_h_device_name;
+		FindMenuItem(menu_array, 1)->suffix = hdev_option;
+		option = UI_driver->fSelect("Host device settings", 0, option, menu_array, &seltype);
 		switch (option) {
 		case 0:
+			if (!Devices_enable_h_patch) {
+				Devices_enable_h_patch = TRUE;
+				Devices_h_read_only = TRUE;
+			}
+			else if (Devices_h_read_only)
+				Devices_h_read_only = FALSE;
+			else {
+				Devices_enable_h_patch = FALSE;
+				Devices_h_read_only = TRUE;
+			}
+			break;
+		case 1:
+			if (seltype == UI_USER_DELETE)
+				Devices_h_device_name = 'H';
+			else {
+				hdev_option[1] = 0;
+				UI_driver->fEditString("Host Device SIO Letter:", hdev_option, 2);
+				if( hdev_option[0] >= 'a' && hdev_option[0] <= 'z' )
+					hdev_option[0] -= 'a' - 'A';
+				if( hdev_option[0] && strchr("ABDFGHIJLMNOQTUVWXYZ", hdev_option[0]) )
+					Devices_h_device_name = hdev_option[0];
+				else
+					UI_driver->fMessage("Invalid device letter", 1);
+			}
+			break;
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+			if (seltype == UI_USER_DELETE)
+				FindMenuItem(menu_array, option)->item[0] = '\0';
+			else
+				UI_driver->fGetDirectoryPath(FindMenuItem(menu_array, option)->item);
+			break;
+		case 6:
 			{
 				char tmp_path[FILENAME_MAX];
 				strcpy(tmp_path, Devices_h_exe_path);
@@ -1725,16 +1773,16 @@ static void AdvancedHOptions(void)
 					strcpy(Devices_h_exe_path, tmp_path);
 			}
 			break;
-		case 1:
+		case 7:
 			if (seltype == UI_USER_DELETE)
 				Devices_H_CloseAll();
 			break;
-		case 2:
-		case 3:
-		case 4:
-		case 5:
+		case 8:
+		case 9:
+		case 10:
+		case 11:
 			if (seltype == UI_USER_DELETE)
-				Devices_h_current_dir[option - 2][0] = '\0';
+				Devices_h_current_dir[option - 8][0] = '\0';
 			break;
 		default:
 			return;
@@ -2221,8 +2269,8 @@ static void AtariSettings(void)
 		UI_MENU_CHECK(3, "SIO patch (fast disk access):"),
 		UI_MENU_CHECK(17, "Turbo (F12):"),
 		UI_MENU_CHECK(19, "Slow booting of DOS binary files:"),
-		UI_MENU_ACTION(4, "H: device (hard disk):"),
 		UI_MENU_CHECK(5, "P: device (printer):"),
+		UI_MENU_ACTION_PREFIX(12, " Print command: ", Devices_print_command),
 #ifdef R_IO_DEVICE
 #ifdef DREAMCAST
 		UI_MENU_CHECK(6, "R: device (using Coder's Cable):"),
@@ -2230,12 +2278,7 @@ static void AtariSettings(void)
 		UI_MENU_CHECK(6, "R: device (Atari850 via net):"),
 #endif
 #endif
-		UI_MENU_FILESEL_PREFIX(7, "H1: ", Devices_atari_h_dir[0]),
-		UI_MENU_FILESEL_PREFIX(8, "H2: ", Devices_atari_h_dir[1]),
-		UI_MENU_FILESEL_PREFIX(9, "H3: ", Devices_atari_h_dir[2]),
-		UI_MENU_FILESEL_PREFIX(10, "H4: ", Devices_atari_h_dir[3]),
-		UI_MENU_SUBMENU(11, "Advanced H: options"),
-		UI_MENU_ACTION_PREFIX(12, "Print command: ", Devices_print_command),
+		UI_MENU_SUBMENU(11, "Host device settings"),
 		UI_MENU_SUBMENU(13, "System ROM settings"),
 		UI_MENU_SUBMENU(14, "Configure directories"),
 #ifndef DREAMCAST
@@ -2259,7 +2302,6 @@ static void AtariSettings(void)
 #endif /* XEP80_EMULATION */
 		SetItemChecked(menu_array, 17, Atari800_turbo);
 		SetItemChecked(menu_array, 19, BINLOAD_slow_xex_loading);
-		FindMenuItem(menu_array, 4)->suffix = Devices_enable_h_patch ? (Devices_h_read_only ? "Read-only" : "Read/write") : "No ";
 		SetItemChecked(menu_array, 5, Devices_enable_p_patch);
 #ifdef R_IO_DEVICE
 		SetItemChecked(menu_array, 6, Devices_enable_r_patch);
@@ -2282,18 +2324,6 @@ static void AtariSettings(void)
 		case 3:
 			ESC_enable_sio_patch = !ESC_enable_sio_patch;
 			break;
-		case 4:
-			if (!Devices_enable_h_patch) {
-				Devices_enable_h_patch = TRUE;
-				Devices_h_read_only = TRUE;
-			}
-			else if (Devices_h_read_only)
-				Devices_h_read_only = FALSE;
-			else {
-				Devices_enable_h_patch = FALSE;
-				Devices_h_read_only = TRUE;
-			}
-			break;
 		case 5:
 			Devices_enable_p_patch = !Devices_enable_p_patch;
 			break;
@@ -2302,17 +2332,8 @@ static void AtariSettings(void)
 			Devices_enable_r_patch = !Devices_enable_r_patch;
 			break;
 #endif
-		case 7:
-		case 8:
-		case 9:
-		case 10:
-			if (seltype == UI_USER_DELETE)
-				FindMenuItem(menu_array, option)->item[0] = '\0';
-			else
-				UI_driver->fGetDirectoryPath(FindMenuItem(menu_array, option)->item);
-			break;
 		case 11:
-			AdvancedHOptions();
+			HDeviceStatus();
 			break;
 		case 12:
 			strcpy(tmp_command, Devices_print_command);
@@ -4001,8 +4022,8 @@ static void ControllerConfiguration(void)
 		mouse_speed_status[0] = (char) ('0' + INPUT_mouse_speed);
 #endif
 #ifdef GUI_SDL
-		SetItemChecked(menu_array, 5, PLATFORM_kbd_joy_0_enabled);
-		SetItemChecked(menu_array, 7, PLATFORM_kbd_joy_1_enabled);
+		SetItemChecked(menu_array, 5, PLATFORM_IsKbdJoystickEnabled(0));
+		SetItemChecked(menu_array, 7, PLATFORM_IsKbdJoystickEnabled(1));
 #endif
 #ifdef DIRECTX
 		menu_array[5].suffix = keyboard_joystick_mode_array[keyboardJoystickMode].item;
@@ -4063,13 +4084,13 @@ static void ControllerConfiguration(void)
 #endif
 #ifdef GUI_SDL
 		case 5:
-			PLATFORM_kbd_joy_0_enabled = !PLATFORM_kbd_joy_0_enabled;
+			PLATFORM_ToggleKbdJoystickEnabled(0);
 			break;
 		case 6:
 			KeyboardJoystickConfiguration(0);
 			break;
 		case 7:
-			PLATFORM_kbd_joy_1_enabled = !PLATFORM_kbd_joy_1_enabled;
+			PLATFORM_ToggleKbdJoystickEnabled(1);
 			break;
 		case 8:
 			KeyboardJoystickConfiguration(1);
