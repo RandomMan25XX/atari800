@@ -26,8 +26,8 @@ P65C02 equ 0            ; set to 1 to emulate this version of processor (6502 ha
                         ; you can emulate this bug by commenting out this line :)
   endif
 
-  ifnd PROFILE
-PROFILE equ 0           ; set to 1 to fill the 'CPU_instruction_count' array for instruction profiling
+  ifnd MONITOR_PROFILE
+MONITOR_PROFILE equ 0   ; set to 1 to fill the 'CPU_instruction_count' array for instruction profiling
   endif
 
   ifnd MONITOR_BREAK
@@ -78,7 +78,7 @@ NEW_CYCLE_EXACT equ 0   ; set to 1 to use the new cycle exact CPU emulation
   xdef _CPU_regY
   xref _MEMORY_mem
   xref _MEMORY_attrib
-  ifne PROFILE
+  ifne MONITOR_PROFILE
   xref _CPU_instruction_count
   endif
   ifne MONITOR_BREAK
@@ -108,6 +108,7 @@ NEW_CYCLE_EXACT equ 0   ; set to 1 to use the new cycle exact CPU emulation
   xdef _CPU_PutStatus
   xref _CPU_cim_encountered
   xref _CPU_rts_handler
+  xref _CPU_delayed_nmi
 
   ifne MONITOR_BREAK
 rem_pc_steps  equ 64  ; has to be equal to REMEMBER_PC_STEPS
@@ -2824,6 +2825,7 @@ SOLVE:
   and.w  #$ff00,d0
   bne.s  SOLVE_PB
   addq.l #cy_Bcc1,CD
+  move.b #1,_CPU_delayed_nmi
   bra.w  NEXTCHANGE_WITHOUT
 SOLVE_PB:
   addq.l #cy_Bcc2,CD
@@ -3254,8 +3256,8 @@ COMPARE:
 NEXTCHANGE_N:
   ext.w  NFLAG
 NEXTCHANGE_WITHOUT:
-  cmp.l _ANTIC_xpos_limit,CD
-  bge.s END_OF_CYCLE
+  cmp.l  _ANTIC_xpos_limit,CD
+  bge.s  END_OF_CYCLE
 ****************************************
   ifne   MONITOR_BREAK  ;following block of code allows you to enter
                      ;a break address
@@ -3310,9 +3312,10 @@ NEXTCHANGE_WITHOUT:
 .get_first
   endif
 ****************************************
+  clr.b  _CPU_delayed_nmi
   moveq  #0,d7
   move.b (PC6502)+,d7
-  ifne   PROFILE
+  ifne   MONITOR_PROFILE
   lea    _CPU_instruction_count,a0
   addq.l #1,(a0,d7.l*4)
   endif

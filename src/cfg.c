@@ -219,19 +219,12 @@ int CFG_LoadConfig(const char *alternate_config_filename)
 			else if (strcmp(string, "STEREO_POKEY") == 0) {
 #ifdef STEREO_SOUND
 				POKEYSND_stereo_enabled = Util_sscanbool(ptr);
-#ifdef SOUND_THIN_API
 				Sound_desired.channels = POKEYSND_stereo_enabled ? 2 : 1;
-#endif /* SOUND_THIN_API */
 #endif /* STEREO_SOUND */
 			}
 			else if (strcmp(string, "SPEAKER_SOUND") == 0) {
 #ifdef CONSOLE_SOUND
 				POKEYSND_console_sound_enabled = Util_sscanbool(ptr);
-#endif
-			}
-			else if (strcmp(string, "SERIO_SOUND") == 0) {
-#ifdef SERIO_SOUND
-				POKEYSND_serio_sound_enabled = Util_sscanbool(ptr);
 #endif
 			}
 			else if (strcmp(string, "MACHINE_TYPE") == 0) {
@@ -336,10 +329,10 @@ int CFG_LoadConfig(const char *alternate_config_filename)
 			else if (VIDEOMODE_ReadConfig(string, ptr)) {
 			}
 #endif
-#if defined(SOUND) && defined(SOUND_THIN_API)
+#ifdef SOUND
 			else if (Sound_ReadConfig(string, ptr)) {
 			}
-#endif /* defined(SOUND) && defined(SOUND_THIN_API) */
+#endif /* SOUND */
 #if defined(HAVE_LIBPNG) || defined(HAVE_LIBZ) || defined(AUDIO_RECORDING) || defined(VIDEO_RECORDING)
 			else if (File_Export_ReadConfig(string, ptr)) {
 			}
@@ -447,9 +440,6 @@ int CFG_WriteConfig(void)
 #ifdef CONSOLE_SOUND
 	fprintf(fp, "SPEAKER_SOUND=%d\n", POKEYSND_console_sound_enabled);
 #endif
-#ifdef SERIO_SOUND
-	fprintf(fp, "SERIO_SOUND=%d\n", POKEYSND_serio_sound_enabled);
-#endif
 #endif /* SOUND */
 	fprintf(fp, "BUILTIN_BASIC=%d\n", Atari800_builtin_basic);
 	fprintf(fp, "KEYBOARD_LEDS=%d\n", Atari800_keyboard_leds);
@@ -483,9 +473,9 @@ int CFG_WriteConfig(void)
 #if SUPPORTS_CHANGE_VIDEOMODE
 	VIDEOMODE_WriteConfig(fp);
 #endif
-#if defined(SOUND) && defined(SOUND_THIN_API)
+#ifdef SOUND
 	Sound_WriteConfig(fp);
-#endif /* defined(SOUND) && defined(SOUND_THIN_API) */
+#endif /* SOUND */
 #if defined(HAVE_LIBPNG) || defined(HAVE_LIBZ) || defined(AUDIO_RECORDING) || defined(VIDEO_RECORDING)
 	File_Export_WriteConfig(fp);
 #endif

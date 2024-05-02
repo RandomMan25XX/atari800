@@ -147,9 +147,6 @@
 #ifdef SDL
 #include "sdl/init.h"
 #endif
-#ifdef DIRECTX
-#include "win32\main.h"
-#endif
 
 int Atari800_machine_type = Atari800_MACHINE_XLXE;
 
@@ -586,15 +583,11 @@ int Atari800_Initialise(int *argc, char *argv[])
 #ifdef STEREO_SOUND
 		else if (strcmp(argv[i], "-stereo") == 0) {
 			POKEYSND_stereo_enabled = TRUE;
-#ifdef SOUND_THIN_API
 			Sound_desired.channels = 2;
-#endif /* SOUND_THIN_API */
 		}
 		else if (strcmp(argv[i], "-nostereo") == 0) {
 			POKEYSND_stereo_enabled = FALSE;
-#ifdef SOUND_THIN_API
 			Sound_desired.channels = 1;
-#endif /* SOUND_THIN_API */
 		}
 #endif /* STEREO_SOUND */
 		else if (strcmp(argv[i], "-turbo") == 0) {
@@ -870,6 +863,7 @@ int Atari800_Initialise(int *argc, char *argv[])
 			case AFILE_XFD_GZ:
 			case AFILE_DCM:
 			case AFILE_PRO:
+			case AFILE_ATX:
 				j++;
 				break;
 			default:
@@ -937,7 +931,7 @@ int Atari800_Initialise(int *argc, char *argv[])
 	benchmark_start_time = Util_time();
 #endif
 
-#if defined (SOUND) && defined(SOUND_THIN_API)
+#ifdef SOUND
 	if (Sound_enabled) {
 		/* Up to this point the Sound_enabled flag indicated that we _want_ to
 		   enable sound. From now on, the flag will indicate whether audio
@@ -951,7 +945,7 @@ int Atari800_Initialise(int *argc, char *argv[])
 			/* Start sound if opening audio output was successful. */
 				Sound_Continue();
 	}
-#endif /* defined (SOUND) && defined(SOUND_THIN_API) */
+#endif /* SOUND */
 
 	return TRUE;
 }
@@ -1100,9 +1094,7 @@ void Atari800_Sync(void)
 	double deltatime = 1.0 / ((Atari800_tv_mode == Atari800_TV_PAL) ? Atari800_FPS_PAL : Atari800_FPS_NTSC);
 	double curtime;
 
-#ifdef SYNCHRONIZED_SOUND
 	deltatime *= Sound_AdjustSpeed();
-#endif
 #ifdef ALTERNATE_SYNC_WITH_HOST
 	if (! UI_is_active)
 		deltatime *= Atari800_refresh_rate;
@@ -1551,15 +1543,8 @@ void Atari800_SetTVMode(int mode)
 		VIDEOMODE_SetVideoSystem(mode);
 #endif
 #ifdef SOUND
-#ifdef SOUND_THIN_API
 		if (Sound_enabled)
 			POKEYSND_Init(POKEYSND_FREQ_17_EXACT, Sound_out.freq, Sound_out.channels, Sound_out.sample_size == 2 ? POKEYSND_BIT16 : 0);
-#elif defined(SUPPORTS_SOUND_REINIT)
-		Sound_Reinit();
-#endif /* defined(SUPPORTS_SOUND_REINIT) */
 #endif /* SOUND */
-#if defined(DIRECTX)
-		SetTVModeMenuItem(mode);
-#endif
 	}
 }

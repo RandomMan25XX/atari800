@@ -30,7 +30,7 @@ AC_CONFIG_MACRO_DIR([m4])
 dnl Set a8_target...
 
 case "$target" in
-    default | falcon | firebee | ps2 | rpi | android | windx | x11 | x11-shm | x11-motif | x11-xview | x11-xview-shm | libatari800)
+    default | falcon | firebee | ps2 | rpi | android | x11 | x11-shm | x11-motif | x11-xview | x11-xview-shm | libatari800)
         a8_target="$target"
         ;;
     shm | motif | xview | xview-shm)
@@ -51,7 +51,6 @@ case "$target" in
         echo "    falcon           (Atari Falcon: set --host=m68k-atari-mint)"
         echo "    firebee          (FireBee: set --host=m68k-atari-mint)"
         echo "    ps2              (Sony PlayStation 2)"
-        echo "    windx            (Windows with DirectX only)"
         echo "    libatari800      (Atari800 as a library (developers only))"
         echo "    x11              (Standard X11)"
         echo "    (x11-)motif      (Motif on X11)"
@@ -81,6 +80,7 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 WANT_IDE="yes"
 WANT_POKEYREC="yes"
+SUPPORTS_RDEVICE="yes"
 
 dnl Set a8_host...
 
@@ -189,10 +189,12 @@ fi
 if [[ "$a8_host" = "falcon" ]]; then
 	CFLAGS="-m68020-60 -O2 -fomit-frame-pointer -Wall"
 	LDFLAGS="-m68020-60"
+	SUPPORTS_RDEVICE=no
 fi
 if [[ "$a8_host" = "firebee" ]]; then
 	CFLAGS="-mcpu=5475 -O2 -fomit-frame-pointer -Wall"
 	LDFLAGS="-mcpu=5475"
+	SUPPORTS_RDEVICE=no
 fi
 if [[ "$a8_target" = "libatari800" ]]; then
     with_readline=no
@@ -344,7 +346,6 @@ AC_CHECK_HEADERS([direct.h errno.h file.h signal.h sys/time.h time.h unistd.h un
 AC_HEADER_TIOCGWINSZ
 SUPPORTS_SOUND_OSS=yes
 AC_CHECK_HEADERS([fcntl.h sys/ioctl.h sys/soundcard.h],,SUPPORTS_SOUND_OSS=no)
-SUPPORTS_RDEVICE=yes
 if [[ "$a8_host" = "win" ]]; then
     AC_CHECK_HEADERS([windows.h winsock2.h],,SUPPORTS_RDEVICE=no)
 else
@@ -440,24 +441,6 @@ dnl BeOS has a real issue with redundant-decls
         AC_DEFINE(DIRTYRECT,1,[Define to use dirty screen partial repaints.])
         dnl AC_DEFINE(NODIRTYCOMPARE,1,[Define to skip memory comparisons - Requires DIRTYRECT.])
         ;;
-    windx)
-        AC_DEFINE(DIRECTX,1,[Target: Windows with DirectX.])
-        AC_DEFINE(SUPPORTS_PLATFORM_CONFIGURE,1,[Additional config file options.])
-        AC_DEFINE(SUPPORTS_PLATFORM_CONFIGSAVE,1,[Save additional config file options.])
-        AC_DEFINE(SUPPORTS_PLATFORM_PALETTEUPDATE,1,[Update the Palette if it changed.])
-        AC_DEFINE(SUPPORTS_SOUND_REINIT,1,[Reinitialise the sound system.])
-        A8_NEED_LIB(ddraw)
-        A8_NEED_LIB(dinput)
-        A8_NEED_LIB(dsound)
-        A8_NEED_LIB(dxguid)
-        A8_NEED_LIB(d3d9)
-        A8_NEED_LIB(gdiplus)
-        A8_NEED_LIB(stdc++)
-        A8_NEED_LIB(ws2_32)
-        A8_NEED_LIB(gdi32)
-        CFLAGS="$CFLAGS -ansi -pedantic -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wstrict-prototypes -Winline"
-        LDFLAGS="$LDFLAGS -mwindows"
-        ;;
     libatari800)
         AC_DEFINE(LIBATARI800,1,[Target: Atari800 as a library.])
         AC_DEFINE(SUPPORTS_PLATFORM_CONFIGURE,1,[Additional config file options.])
@@ -510,7 +493,6 @@ AM_CONDITIONAL([CONFIGURE_TARGET_ANDROID], test "$a8_target" = android)
 AM_CONDITIONAL([CONFIGURE_TARGET_FALCON], test "$a8_target" = falcon)
 AM_CONDITIONAL([CONFIGURE_TARGET_PS2], test "$a8_target" = ps2)
 AM_CONDITIONAL([CONFIGURE_TARGET_RPI], test "$a8_target" = rpi)
-AM_CONDITIONAL([CONFIGURE_TARGET_WINDX], test "$a8_target" = windx)
 AM_CONDITIONAL([CONFIGURE_TARGET_LIBATARI800], test "$a8_target" = libatari800)
 AM_CONDITIONAL([CONFIGURE_TARGET_X11], test "$WANT_X11" = yes)
 
@@ -929,10 +911,10 @@ AM_CONDITIONAL([WANT_PBI_BB], test "$WANT_PBI_BB" = "yes")
 dnl Select/detect sound interface.
 
 AC_ARG_WITH([sound],
-    [AC_HELP_STRING([--with-sound@<:@=no|yes|dossb|oss|falcon|win|sdl|javanvm@:>@],[Select sound interface to use @<:@default=check@:>@])],
+    [AC_HELP_STRING([--with-sound@<:@=no|yes|dossb|oss|falcon|sdl|javanvm@:>@],[Select sound interface to use @<:@default=check@:>@])],
     [
         case "$withval" in
-            no | yes | check | dossb | oss | falcon | win | sdl | javanvm)
+            no | yes | check | dossb | oss | falcon | sdl | javanvm)
                 ;;
             *)
                 AC_MSG_ERROR([unrecognized value for --with-sound: "$withval"])
@@ -944,15 +926,8 @@ AC_ARG_WITH([sound],
 if [[ "$a8_target" = libatari800 ]]; then
     if [[ "$with_sound" = check -o "$with_sound" = yes ]]; then
         with_sound=libatari800
-        WANT_SOUND_THIN_API=yes
         WANT_SOUND_CALLBACK=no
         WANT_CONSOLE_SOUND=yes
-        WANT_SERIO_SOUND=yes
-        WANT_VOL_ONLY_SOUND=no
-
-        WANT_SYNCHRONIZED_SOUND=no
-        dnl workaround for WANT_SYNCHRONIZED_SOUND being ignored by A8_OPTION macro
-        enable_synchronized_sound=no
     else
         AC_MSG_ERROR([--with-audio option not needed to build libatari800!])
     fi
@@ -964,16 +939,6 @@ elif [[ "$a8_target" != "ps2" -a "$a8_target" != "android" ]]; then
             elif [[ "$with_sound" = javanvm ]]; then
                 AC_MSG_ERROR([--with-sound=javanvm was given, but host system is not NestedVM!])
             fi
-        fi
-        if [[ "$with_sound" = check -o "$with_sound" = yes -o "$with_sound" = win ]]; then
-            AC_CHECK_LIB([winmm], [main],
-                [LIBS="-lwinmm $LIBS"
-                 with_sound=win
-                ],
-                [if [[ "$with_sound" = win ]]; then
-                    AC_MSG_FAILURE([--with-sound=win was given, but WinMM library not found!])
-                 fi
-                ])
         fi
         if [[ "$with_sound" = check -o "$with_sound" = yes -o "$with_sound" = falcon ]]; then
             if [[ "$a8_host" = falcon -o "$a8_host" = firebee ]]; then
@@ -1009,25 +974,13 @@ elif [[ "$a8_target" != "ps2" -a "$a8_target" != "android" ]]; then
         with_sound=no
     fi
     case "$with_sound" in
-        javanvm)
-            WANT_SOUND_THIN_API=yes
-            ;;
         sdl)
-            WANT_SOUND_THIN_API=yes
             WANT_SOUND_CALLBACK=yes
-            ;;
-        win)
-            AC_DEFINE(SUPPORTS_SOUND_REINIT,1,[Reinitialise the sound system.])
             ;;
         falcon)
             AC_DEFINE(POKEYSND_SIGNED_SAMPLES,1,[Use 8-bit signed samples.])
-            WANT_SOUND_THIN_API=yes
-            ;;
-        oss)
-            WANT_SOUND_THIN_API=yes
             ;;
         dossb)
-            WANT_SOUND_THIN_API=yes
             WANT_SOUND_CALLBACK=yes
             ;;
         no)
@@ -1042,7 +995,6 @@ AM_CONDITIONAL([WITH_SOUND_JAVANVM], test "$with_sound" = javanvm)
 AM_CONDITIONAL([WITH_SOUND_FALCON], test "$with_sound" = falcon)
 AM_CONDITIONAL([WITH_SOUND_OSS], test "$with_sound" = oss)
 AM_CONDITIONAL([WITH_SOUND_SDL], test "$with_sound" = sdl)
-AM_CONDITIONAL([WITH_SOUND_WIN], test "$with_sound" = win)
 AM_CONDITIONAL([WITH_SOUND_DOSSB], test "$with_sound" = dossb)
 AM_CONDITIONAL([WITH_SOUND_LIBATARI800], test "$with_sound" = libatari800)
 AM_CONDITIONAL([A8_USE_SDL], test "$a8_use_sdl" = yes)
@@ -1053,22 +1005,13 @@ if [[ "$with_sound" != no ]]; then
 
     AC_DEFINE(SOUND, 1, [Define to activate sound support.])
 
-    if [[ "$WANT_SOUND_THIN_API" = "yes" ]]; then
-        AC_DEFINE(SOUND_THIN_API,1,[Use new sound API.])
-        A8_OPTION(synchronized_sound,yes,
-                  [Use synchronized sound (default=ON)],
-                  SYNCHRONIZED_SOUND,[Define to use synchronized sound.]
-                 )
-        if [[ "$WANT_SOUND_CALLBACK" = "yes" ]]; then
-            AC_DEFINE(SOUND_CALLBACK,1,[Platform updates sound buffer by callback function.])
-        fi
-    else
-        WANT_SYNCHRONIZED_SOUND="no"
+    if [[ "$WANT_SOUND_CALLBACK" = "yes" ]]; then
+        AC_DEFINE(SOUND_CALLBACK,1,[Platform updates sound buffer by callback function.])
     fi
 
     A8_OPTION(nonlinear_mixing,yes,
-              [Use nonlinear POKEY mixing (default=ON)],
-              NONLINEAR_MIXING,[Define to use nonlinear POKEY mixing.]
+              [Use nonlinear mixing on high fidelity POKEY (default=ON)],
+              NONLINEAR_MIXING,[Define to use nonlinear mixing on high fidelity POKEY.]
              )
 
     A8_OPTION(interpolatesound,yes,
@@ -1081,25 +1024,10 @@ if [[ "$with_sound" != no ]]; then
               STEREO_SOUND,[Define to allow stereo sound.]
              )
 
-    if [[ "$WANT_SYNCHRONIZED_SOUND" != "yes" ]]; then
-        A8_OPTION(volonlysound,yes,
-                  [Use volume only sound (digitized sound effects) (default=ON)],
-                  VOL_ONLY_SOUND,[Define to allow volume only sound.]
-                 )
-    fi
-    if [[ "$WANT_SYNCHRONIZED_SOUND" = "yes" -o "$WANT_VOL_ONLY_SOUND" = "yes" ]]; then
-        A8_OPTION(consolesound,yes,
-                  [Use console sound (keyboard clicks) (default=ON)],
-                  CONSOLE_SOUND,[Define to allow console sound (keyboard clicks).]
-                 )
-        A8_OPTION(seriosound,no,
-                  [Use serial in/out sound (default=OFF)],
-                  SERIO_SOUND,[Define to allow serial in/out sound.]
-                 )
-    else
-        WANT_CONSOLE_SOUND="no"
-        WANT_SERIO_SOUND="no"
-    fi
+    A8_OPTION(consolesound,yes,
+              [Use console sound (keyboard clicks) (default=ON)],
+              CONSOLE_SOUND,[Define to allow console sound (keyboard clicks).]
+             )
 
     A8_OPTION(clipsound,no,
               [Use sound clipping (default=OFF)],
@@ -1160,12 +1088,9 @@ if [[ "$with_sound" != no ]]; then
     fi
 else
     WANT_NONLINEAR_MIXING="no"
-    WANT_SYNCHRONIZED_SOUND="no"
     WANT_INTERPOLATE_SOUND="no"
     WANT_STEREO_SOUND="no"
-    WANT_VOL_ONLY_SOUND="no"
     WANT_CONSOLE_SOUND="no"
-    WANT_SERIO_SOUND="no"
     WANT_CLIP_SOUND="no"
     WANT_PBI_XLD_SOUND="no"
     WANT_AUDIO_RECORDING="no"
@@ -1369,13 +1294,6 @@ if [[ "$a8_host" = "linux" ]]; then
     esac
 fi
 
-if [[ "$a8_target" = "windx" ]]; then
-    A8_OPTION(cursorblock,no,
-              [Using cursor/ctrl keys for keyboard joystick (windx targets only) (default=OFF)],
-              USE_CURSORBLOCK,[Define for using cursor/ctrl keys for keyboard joystick.]
-             )
-fi
-
 if [[ "$WANT_XEP80_EMULATION" = "yes" ]]; then
     AC_DEFINE(XEP80_EMULATION,1,[Emulate the XEP80.])
 fi
@@ -1485,16 +1403,9 @@ echo "Using Pokey registers recording?......: $WANT_POKEYREC"
 echo "Interface for sound...................: $with_sound"
 if [[ "$with_sound" != no ]]; then
     echo "    Using nonlinear mixing?...........: $WANT_NONLINEAR_MIXING"
-    echo "    Using synchronized sound?.........: $WANT_SYNCHRONIZED_SOUND"
     echo "    Using sound interpolation?........: $WANT_INTERPOLATE_SOUND"
     echo "    Using stereo sound?...............: $WANT_STEREO_SOUND"
-    echo "    Using volume only sound?..........: $WANT_VOL_ONLY_SOUND"
-    if [[ "$WANT_VOL_ONLY_SOUND" = "yes" ]]; then
-        echo "        Using console sound?..........: $WANT_CONSOLE_SOUND"
-        echo "        Using serial I/O sound?.......: $WANT_SERIO_SOUND"
-    else
-        echo "        (Volume only sound sub-options disabled)"
-    fi
+    echo "    Using console sound?..............: $WANT_CONSOLE_SOUND"
     echo "    Using 1400XL/1450XLD emulation?...: $WANT_PBI_XLD"
     echo "    Using sound clipping?.............: $WANT_CLIP_SOUND"
     echo "    Using audio recording?............: $WANT_AUDIO_RECORDING"
@@ -1520,9 +1431,6 @@ if [[ "$a8_host" = "linux" ]]; then
         x11*)
             echo "Using Linux joystick?.................: $WANT_LINUX_JOYSTICK"
     esac
-fi
-if [[ "$a8_target" = "windx" ]]; then
-    echo "Using cursor/ctrl keys?...............: $WANT_USE_CURSORBLOCK"
 fi
 if [[ "$SUPPORTS_RDEVICE" = "yes" ]]; then
     echo "Using R: device?......................: $WANT_R_IO_DEVICE"

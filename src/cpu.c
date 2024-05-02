@@ -103,8 +103,8 @@ unsigned int CPU_remember_jmp_curpos = 0;
 
 UBYTE CPU_cim_encountered = FALSE;
 UBYTE CPU_IRQ;
+UBYTE CPU_delayed_nmi;
 
-#ifndef FALCON_CPUASM
 /* Windows headers define it */
 #undef ABSOLUTE
 
@@ -129,6 +129,8 @@ UBYTE CPU_IRQ;
 #define PL                  MEMORY_dGetByte(0x0100 + ++S)
 #define PH(x)               MEMORY_dPutByte(0x0100 + S--, x)
 #define PHW(x)              PH((x) >> 8); PH((x) & 0xff)
+
+#ifndef FALCON_CPUASM
 
 /* 6502 code fetching */
 #ifdef PC_PTR
@@ -281,6 +283,13 @@ void CPU_PutStatus(void)
 #define PLP         data = PL; N = data; Z = (data & 0x02) ^ 0x02; C = (data & 0x01); CPU_regP = (data & 0x4c) + 0x30
 #endif /* NO_V_FLAG_VARIABLE */
 /* 1 or 2 extra cycles for conditional jumps */
+/* Altirra Hardware Reference Manual:
+ * A taken relative branch delays interrupt acknowledgment by one cycle:
+ * a case in which the earliest opportunity to respond to an interrupt
+ * is immediately after the branch instead is delayed to the next
+ * instruction. This occurs for any Bcc instruction which does not
+ * cross a page boundary.
+ */
 #if 0
 /* old, less efficient version */
 #define BRANCH(cond) \
@@ -288,6 +297,8 @@ void CPU_PutStatus(void)
 		SWORD sdata = (SBYTE) GET_CODE_BYTE(); \
 		if ((sdata + (UBYTE) GET_PC()) & 0xff00) \
 			ANTIC_xpos++; \
+		else \
+			CPU_delayed_nmi = 1; \
 		ANTIC_xpos++; \
 		PC += sdata; \
 		DONE \
@@ -301,6 +312,8 @@ void CPU_PutStatus(void)
 		addr += GET_PC(); \
 		if ((addr ^ GET_PC()) & 0xff00) \
 			ANTIC_xpos++; \
+		else \
+			CPU_delayed_nmi = 1; \
 		ANTIC_xpos++; \
 		SET_PC(addr); \
 		DONE \
@@ -313,12 +326,54 @@ void CPU_PutStatus(void)
 #define NCYCLES_X   if ((UBYTE) addr < X) ANTIC_xpos++
 #define NCYCLES_Y   if ((UBYTE) addr < Y) ANTIC_xpos++
 
+#else /* FALCON_CPUASM */
+
+#if defined(CPU65C02)
+#error Define P65C02 in cpu_m68k.asm instead
+#endif
+
+#if defined(CYCLES_PER_OPCODE) || defined(NO_GOTO) || defined(NO_V_FLAG_VARIABLE) || defined(PC_PTR)
+#warning CYCLES_PER_OPCODE, NO_GOTO, NO_V_FLAG_VARIABLE, PC_PTR have no effect in cpu_m68k.asm
+#endif
+
+#if defined(MONITOR_BREAKPOINTS)
+#error cpu_m68k.asm does not support user-defined breakpoints
+#endif
+
+#if defined(MONITOR_TRACE)
+#error cpu_m68k.asm does not support disassembling the code while it is executed
+#endif
+
+#if defined(PREFETCH_CODE) || defined(WRAP_64K) || defined(WRAP_ZPAGE)
+#warning PREFETCH_CODE, WRAP_64K, WRAP_ZPAGE have not been implemented in cpu_m68k.asm
+#endif
+
+#if defined(PAGED_MEM) || defined(PAGED_ATTRIB)
+#error cpu_m68k.asm cannot work with paged memory/attributes
+#endif
+
+#define UPDATE_GLOBAL_REGS
+#define UPDATE_LOCAL_REGS
+
+#define SET_PC(newpc)	(CPU_regPC = (newpc))
+#define PHPC			PHW(CPU_regPC)
+
+#define PHPB0			PH(CPU_regP & 0xef)	/* push flags with B flag clear (NMI, IRQ) */
+
+#endif /* FALCON_CPUASM */
+
 /* Triggers a Non-Maskable Interrupt */
 void CPU_NMI(void)
 {
-	UBYTE S = CPU_regS;
+	UBYTE S;
+#ifndef FALCON_CPUASM
 	UBYTE data;
+#endif
 
+	if(CPU_delayed_nmi > 0)
+		CPU_GO(ANTIC_xpos_limit + CPU_delayed_nmi);
+
+	S = CPU_regS;
 	PHW(CPU_regPC);
 	PHPB0;
 	CPU_SetI;
@@ -328,16 +383,29 @@ void CPU_NMI(void)
 	INC_RET_NESTING;
 }
 
+/* avoid copy&pasting whole CPUCHECKIRQ */
+#ifndef FALCON_CPUASM
+#define CPUCHECKIRQ_SAVE_S
+#define CPUCHECKIRQ_RESTORE_S
+#else
+#define CPUCHECKIRQ_SAVE_S		UBYTE S = CPU_regS
+#define CPUCHECKIRQ_RESTORE_S	CPU_regS = S
+#endif
+
 /* Check pending IRQ, helps in (not only) Lucasfilm games */
 #define CPUCHECKIRQ \
 	if (CPU_IRQ && !(CPU_regP & CPU_I_FLAG) && ANTIC_xpos < ANTIC_xpos_limit) { \
+		CPUCHECKIRQ_SAVE_S; \
 		PHPC; \
 		PHPB0; \
 		CPU_SetI; \
 		SET_PC(MEMORY_dGetWordAligned(0xfffe)); \
+		CPUCHECKIRQ_RESTORE_S; \
 		ANTIC_xpos += 7; \
 		INC_RET_NESTING; \
 	}
+
+#ifndef FALCON_CPUASM
 
 /* Enter monitor */
 #ifdef __PLUS
@@ -495,47 +563,6 @@ void CPU_GO(int limit)
 
 #else /* FALCON_CPUASM */
 
-#if defined(PAGED_MEM) || defined(PAGED_ATTRIB)
-#error cpu_m68k.asm cannot work with paged memory/attributes
-#endif
-
-#if defined(MONITOR_BREAKPOINTS)
-#error cpu_m68k.asm does not support user-defined breakpoints
-#endif
-
-#if defined(MONITOR_TRACE)
-#error cpu_m68k.asm does not support disassembling the code while it is executed
-#endif
-
-#if defined(CYCLES_PER_OPCODE)
-#warning per opcode cycles update has no effect in cpu_m68k.asm
-#endif
-
-#define UPDATE_GLOBAL_REGS
-#define UPDATE_LOCAL_REGS
-
-#define PH(x)  MEMORY_dPutByte(0x0100 + S--, x)
-#define PHW(x) PH((x) >> 8); PH((x) & 0xff)
-#define INTERRUPT(address)  \
-	UBYTE S = CPU_regS;     \
-	PHW(CPU_regPC);         \
-	PH(CPU_regP & 0xef);	\
-	CPU_SetI;               \
-	CPU_regPC = MEMORY_dGetWordAligned(address); \
-	CPU_regS = S;           \
-	ANTIC_xpos += 7;        \
-	INC_RET_NESTING;
-
-void CPU_NMI(void)
-{
-	INTERRUPT(0xfffa);
-}
-
-#define CPUCHECKIRQ \
-	if (CPU_IRQ && !(CPU_regP & CPU_I_FLAG) && ANTIC_xpos < ANTIC_xpos_limit) { \
-		INTERRUPT(0xfffe); \
-	}
-
 void CPU_GO(int limit)
 {
 #endif /* FALCON_CPUASM */
@@ -590,6 +617,7 @@ void CPU_GO(int limit)
 
 #ifndef FALCON_CPUASM
 	while (ANTIC_xpos < ANTIC_xpos_limit) {
+		CPU_delayed_nmi = 0;
 #ifdef MONITOR_PROFILE
 		int old_xpos = ANTIC_xpos;
 		UWORD old_PC = GET_PC();
